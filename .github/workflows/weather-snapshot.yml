@@ -1,0 +1,36 @@
+# 阶段九（可选保险）：每天三次对应 NMC 发报时刻抓取快照，提交 data.json 回仓库
+# 前端直连 NMC 失败时自动回退读这份快照
+name: weather-snapshot
+
+on:
+  schedule:
+    # GitHub Actions cron 为 UTC；07:00/13:00/19:00 Asia/Shanghai = 23:00/05:00/11:00 UTC
+    - cron: "0 23 * * *"
+    - cron: "0 5 * * *"
+    - cron: "0 11 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - run: pip install requests
+      - run: python3 nmc_weather.py --json data.json
+      - name: commit data.json
+        run: |
+          if git diff --quiet data.json 2>/dev/null && git ls-files --error-unmatch data.json >/dev/null 2>&1; then
+            echo "数据无变化，跳过提交"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data.json
+            git commit -m "chore: 更新天气快照 data.json ($(date -u +'%Y-%m-%d %H:%M') UTC)"
+            git push
+          fi

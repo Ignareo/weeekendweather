@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>周末去哪 · 天气筛选</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  :root { --red:#fde8e8; --green:#e6f6e6; --border:#ddd; --ink:#333; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+         margin: 0 auto; max-width: 1180px; padding: 12px 16px; color: var(--ink); }
+  h1 { font-size: 22px; margin: 8px 0 4px; }
+  h2 { font-size: 16px; margin: 14px 0 8px; }
+  .src-note { color: #888; font-size: 12px; margin: 0 0 8px; }
+  .meta { color: #555; font-size: 13px; margin: 4px 0; }
+  .warn-text { color: #b45309; font-size: 13px; }
+  button { cursor: pointer; border: 1px solid var(--border); background: #fff;
+           border-radius: 6px; padding: 5px 10px; font-size: 13px; }
+  button:hover { background: #f3f4f6; }
+  button.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+  button.primary:hover { background: #1d4ed8; }
+  button.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+  button.active:hover { background: #1d4ed8; }
+  input, select, textarea { border: 1px solid var(--border); border-radius: 6px;
+           padding: 5px 8px; font-size: 13px; font-family: inherit; }
+  input[type=date], input[type=number] { width: 140px; }
+  input[type=number] { width: 80px; }
+  #controls .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+  #controls label { font-size: 13px; color: #555; display: flex; align-items: center; gap: 4px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 8px; }
+  th, td { border: 1px solid var(--border); padding: 6px 8px; text-align: left;
+           white-space: nowrap; }
+  th { background: #f8fafc; position: sticky; top: 0; }
+  td.wrap, th.wrap { white-space: normal; }
+  tr.city-row { cursor: pointer; }
+  tr.city-row:hover { background: #f8fafc; }
+  tr.detail-row td { background: #fafafa; white-space: normal; font-size: 12px; color: #444; }
+  td.worse { background: var(--red); }
+  td.better { background: var(--green); }
+  tr.missing td { background: var(--red); color: #991b1b; }
+  .badge { display: inline-block; border-radius: 4px; color: #fff; font-size: 12px;
+           padding: 1px 6px; margin-right: 2px; cursor: pointer; }
+  .badge.blue { background: #3b82f6; } .badge.yellow { background: #eab308; }
+  .badge.orange { background: #f97316; } .badge.red { background: #ef4444; }
+  .panel { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin: 10px 0; }
+  .prov { margin: 4px 0; }
+  .prov-head { font-weight: 600; font-size: 13px; cursor: pointer; user-select: none; }
+  .prov-cities { display: none; flex-wrap: wrap; gap: 4px 12px; padding: 4px 0 4px 18px; font-size: 13px; }
+  .prov.open .prov-cities { display: flex; }
+  #changes ul { margin: 4px 0; padding-left: 20px; font-size: 13px; }
+  #changes li.worse { color: #b91c1c; }
+  #changes li.temp { color: #b45309; }
+  #changes li.info { color: #555; }
+  #changes li.better { color: #15803d; }
+  .err { color: #b91c1c; font-size: 13px; }
+  .ok-text { color: #15803d; font-size: 13px; }
+  #chart-section canvas { max-height: 420px; }
+  .chart-pick { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; margin: 6px 0; }
+  textarea { width: 100%; min-height: 70px; font-family: inherit; }
+  .hidden { display: none !important; }
+  footer { margin: 24px 0 8px; color: #999; font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🌤 周末去哪 · 天气筛选</h1>
+  <p class="src-note">数据来源：中国气象台 nmc.cn 未公开接口，仅供个人学习使用</p>
+  <p class="meta" id="fetch-meta">正在加载…</p>
+  <p class="warn-text" id="publish-hint"></p>
+  <p class="err" id="global-err"></p>
+</header>
+
+<section id="changes" class="panel hidden">
+  <h2>📋 相比上次抓取的变更 <span class="meta" id="changes-base"></span>
+    <button id="clear-base">清除对比基准</button></h2>
+  <ul id="changes-list"></ul>
+  <details id="changes-better-wrap" class="hidden">
+    <summary>✓ 变好的条目（点击展开）</summary>
+    <ul id="changes-better"></ul>
+  </details>
+</section>
+
+<section id="controls" class="panel">
+  <div class="row">
+    <label>📅 <input type="date" id="date-from"> ~ <input type="date" id="date-to"></label>
+    <button id="btn-this-weekend">本周末</button>
+    <button id="btn-next-weekend">下周末</button>
+    <button id="btn-next-holiday" class="hidden">下个法定节假日</button>
+    <span class="warn-text hidden" id="holiday-hint"></span>
+  </div>
+  <div class="row">
+    <label>🌧 雨天接受度
+      <select id="max-rain">
+        <option value="">不限</option>
+        <option value="1">1 只接受无雨</option>
+        <option value="2">2 小雨可以</option>
+        <option value="3">3 中雨也行</option>
+        <option value="4">4 不限</option>
+      </select></label>
+    <label>🌡 白天 ≤ <input type="number" id="max-day" placeholder="°C"></label>
+    <label>🌡 夜间 ≥ <input type="number" id="min-night" placeholder="°C"></label>
+    <label>📆 至少 <input type="number" id="need" min="1" placeholder="全部"> 天达标</label>
+    <label>🚄 <input type="number" id="travel-hours" step="0.5" min="0" placeholder="X"> 小时圈内
+      <select id="travel-mode">
+        <option value="any">任一方式</option>
+        <option value="train">高铁</option>
+        <option value="flight">飞机</option>
+        <option value="drive">自驾</option>
+      </select></label>
+  </div>
+  <div class="row">
+    <button class="primary" id="btn-refresh">🔄 重新抓取</button>
+    <button id="btn-share">🔗 复制分享链接</button>
+    <button id="btn-copy-text">📋 复制文本汇总</button>
+    <button id="btn-cities">🏙 城市管理</button>
+    <button id="btn-travel">🚄 出行数据</button>
+    <button id="btn-chart">📈 温度走势</button>
+    <span id="action-msg" class="ok-text"></span>
+  </div>
+</section>
+
+<section id="city-panel" class="panel hidden">
+  <h2>🏙 城市选择（按省分组）</h2>
+  <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
+    <input type="search" id="city-search" placeholder="搜索城市名…" style="flex:1;min-width:160px">
+    <button id="city-all">全选(搜索结果)</button>
+    <button id="city-none">全不选</button>
+    <button id="city-default">恢复默认</button>
+    <button id="city-export">导出文本</button>
+    <button id="city-import">导入文本</button>
+  </div>
+  <textarea id="city-text" class="hidden" placeholder="每行一个城市名，与 cities.txt 格式互通"></textarea>
+  <div id="city-tree"></div>
+</section>
+
+<section id="travel-panel" class="panel hidden">
+  <h2>🚄 出行时长（小时，可留空）</h2>
+  <div class="row" style="display:flex;gap:8px;margin:6px 0">
+    <button id="travel-export">导出 JSON</button>
+    <button id="travel-import">导入 JSON</button>
+  </div>
+  <textarea id="travel-text" class="hidden" placeholder='{"杭州":{"train":1,"drive":3}}'></textarea>
+  <div id="travel-list"></div>
+</section>
+
+<section id="result">
+  <p class="meta" id="result-meta"></p>
+  <div style="overflow-x:auto">
+  <table id="summary">
+    <thead><tr>
+      <th>城市</th><th>达标</th><th>逐日雨况(✗=不达标)</th><th>综合雨况</th>
+      <th>白天温度</th><th>夜间温度</th><th>总降水</th><th>发报时间</th>
+      <th>出行时长</th><th>预警</th>
+    </tr></thead>
+    <tbody id="summary-body"></tbody>
+  </table>
+  </div>
+</section>
+
+<section id="chart-section" class="panel hidden">
+  <h2>📈 温度走势（今天起 7 天预报，可勾选当前筛选结果中的城市）</h2>
+  <div class="chart-pick" id="chart-pick"></div>
+  <canvas id="temp-chart"></canvas>
+</section>
+
+<footer>
+  Python CLI 保留可用：python3 filter_weather.py（详见 README.md）。站点代码失效时请本地运行
+  python3 nmc_weather.py refresh 后提交新 stations.json。
+</footer>
+
+<script>
+'use strict';
+/* ================= 常量与工具 ================= */
+const DEFAULT_CITIES = ["上海","南京","温岭","台州","景德镇","建德","嘉兴","无锡","苏州","桐乡",
+  "湖州","杭州","南通","镇江","绍兴","桐庐","广德","富阳","安吉","滁州","扬州","宁波","宜兴","丽水","青岛","烟台"];
+const RAIN_LABELS = ["☀️ 无雨", "🌦 小雨", "🌧 中雨", "⛈ 大到暴雨"];
+const RAIN_ICONS = ["☀️", "🌦", "🌧", "⛈"];
+const WEEKDAYS = ["周日","周一","周二","周三","周四","周五","周六"];
+const LS = { cities: "wq_cities", filters: "wq_filters", travel: "wq_travel", snap: "wq_snapshots" };
+
+const $ = id => document.getElementById(id);
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
+const lsSet = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const parseIso = s => { const [y,m,dd] = s.split("-").map(Number); return new Date(y, m-1, dd); };
+const mmdd = s => s.slice(5);
+const wday = s => WEEKDAYS[parseIso(s).getDay()];
+
+function toast(msg, isErr) {
+  const el = $("action-msg");
+  el.textContent = msg; el.className = isErr ? "err" : "ok-text";
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.textContent = "", 4000);
+}
+
+/* ================= 雨况档位（与 filter_weather.py 一致） ================= */
+function textRainTier(w) {
+  if (!w) return 0;
+  if (/(大暴雨|暴雨|大雨|大雪|暴雪)/.test(w)) return 3;
+  if (/(中雨|中雪|雷阵雨)/.test(w)) return 2;
+  if (/(小雨|小雪|阵雨|雨|雪)/.test(w)) return 1;
+  return 0;
+}
+function mmRainTier(mm) {
+  if (mm <= 0) return 0;
+  if (mm < 10) return 1;
+  if (mm < 25) return 2;
+  return 3;
+}
+const rowRainTier = d => Math.max(textRainTier(d.dayInfo), textRainTier(d.nightInfo), mmRainTier(d.precip || 0));
+
+/* ================= 全局状态 ================= */
+let STATIONS = {};          // 站点缓存
+let HOLIDAYS = {};          // 节假日映射
+let CITIES = lsGet(LS.cities, DEFAULT_CITIES.slice());   // 选中城市（有序）
+let TRAVEL = lsGet(LS.travel, {});                       // 出行时长元数据
+let DATA = null;            // {fetchedAt, source, cities: Map, errors: [], alarmsFailed}
+let chart = null;
+let LAST_DIFF = null;       // {"city|date": "worse"|"better"}
+
+/* ================= URL hash 分享（阶段四） ================= */
+function readFilters() {
+  const v = id => $(id).value.trim();
+  return {
+    from: v("date-from"), to: v("date-to"),
+    rain: v("max-rain"), maxday: v("max-day"), minnight: v("min-night"),
+    need: v("need"), hours: v("travel-hours"), mode: $("travel-mode").value,
+  };
+}
+function applyFilters(f) {
+  $("date-from").value = f.from || ""; $("date-to").value = f.to || "";
+  $("max-rain").value = f.rain || ""; $("max-day").value = f.maxday || "";
+  $("min-night").value = f.minnight || ""; $("need").value = f.need || "";
+  $("travel-hours").value = f.hours || ""; $("travel-mode").value = f.mode || "any";
+}
+function encodeHash() {
+  const f = readFilters(); const p = new URLSearchParams();
+  p.set("cities", CITIES.join(","));
+  for (const k of ["from","to","rain","maxday","minnight","need","hours"])
+    if (f[k]) p.set(k, f[k]);
+  if (f.mode && f.mode !== "any") p.set("mode", f.mode);
+  return "#" + p.toString();
+}
+function decodeHash() {
+  if (!location.hash || location.hash.length < 2) return false;
+  const p = new URLSearchParams(location.hash.slice(1));
+  if (p.get("cities")) {
+    CITIES = p.get("cities").split(",").map(s => s.trim()).filter(Boolean);
+    lsSet(LS.cities, CITIES);
+  }
+  const f = {};
+  for (const k of ["from","to","rain","maxday","minnight","need","hours","mode"])
+    if (p.get(k)) f[k] = p.get(k);
+  applyFilters(f);
+  return true;
+}
+
+/* ================= 站点查找（与 nmc_weather.py find_station 一致） ================= */
+function findStation(name) {
+  if (STATIONS[name]) return STATIONS[name];
+  for (const [city, info] of Object.entries(STATIONS))
+    if (city.startsWith(name) || name.startsWith(city)) return info;
+  return null;
+}
+
+/* ================= 数据抓取（阶段一 + 阶段九兜底） ================= */
+function normalizeData(name, st, d) {
+  // 将 /rest/weather 的 data 节点规整为内部结构
+  // 注意: 晚间发报批次中"当天白天"字段为 "9999"(无数据), 温度/文字需按缺失处理
+  const num = v => { const n = parseFloat(v); return (isNaN(n) || n === 9999) ? null : n; };
+  const txt = v => (v === "9999" || v == null) ? "" : v;
+  const detail = (d.predict && d.predict.detail) || [];
+  const days = detail.map(x => ({
+    date: x.date,
+    dayInfo: txt(x.day.weather.info), dayTemp: num(x.day.weather.temperature),
+    dayWindD: txt(x.day.wind.direct), dayWindP: txt(x.day.wind.power),
+    nightInfo: txt(x.night.weather.info), nightTemp: num(x.night.weather.temperature),
+    nightWindD: txt(x.night.wind.direct), nightWindP: txt(x.night.wind.power),
+    precip: num(x.precipitation) || 0,
+  }));
+  for (const day of days) day.tier = rowRainTier(day);
+  const rw = (d.real && d.real.weather) || {};
+  const warn = (d.real && d.real.warn) || {};
+  return {
+    name, province: st ? st.province : (d.predict && d.predict.station && d.predict.station.province) || "",
+    code: st ? st.code : "",
+    publishTime: (d.predict && d.predict.publish_time) || "",
+    realPublishTime: (d.real && d.real.publish_time) || "",
+    days,
+    feelst: rw.feelst, humidity: rw.humidity,
+    comfort: rw.rcomfort !== undefined && rw.rcomfort !== 9999 ? `${rw.rcomfort}(${rw.icomfort}级)` : "",
+    aqi: d.air ? d.air.aqi : null, aqiText: d.air ? d.air.text : "",
+    sunrise: d.real && d.real.sunriseSunset ? d.real.sunriseSunset.sunrise : "",
+    sunset: d.real && d.real.sunriseSunset ? d.real.sunriseSunset.sunset : "",
+    warn: warn.alert && warn.alert !== "9999" ? { title: warn.alert, url: warn.url } : null,
+    tempchart: d.tempchart || [],
+    alarms: [],
+  };
+}
+
+async function fetchLive() {
+  const jobs = CITIES.map(async name => {
+    const st = findStation(name);
+    if (!st) return { name, missing: true };
+    const resp = await fetch(`https://www.nmc.cn/rest/weather?stationid=${encodeURIComponent(st.code)}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const j = await resp.json();
+    if (!j.data || !j.data.predict) throw new Error("响应结构变更");
+    return { name, st, data: normalizeData(name, st, j.data) };
+  });
+  const settled = await Promise.allSettled(jobs);
+  const cities = new Map(), errors = [], missing = [];
+  for (const r of settled) {
+    if (r.status === "rejected") errors.push(r.reason.message);
+    else if (r.value.missing) missing.push(r.value.name);
+    else cities.set(r.value.name, r.value.data);
+  }
+  return { cities, errors, missing };
+}
+
+async function fetchSnapshotFallback() {
+  // 阶段九：直连失败时回退 Actions 产出的 data.json
+  const resp = await fetch("data.json", { cache: "no-store" });
+  if (!resp.ok) throw new Error(`data.json HTTP ${resp.status}`);
+  const j = await resp.json();
+  const cities = new Map(), missing = [];
+  for (const name of CITIES) {
+    const c = (j.cities || []).find(x => x.city === name || (x.city || "").startsWith(name));
+    if (!c) { missing.push(name); continue; }
+    cities.set(name, normalizeData(name, { province: c.province, code: c.station_code || "" }, c.data));
+  }
+  return { cities, errors: [], missing, fetchedAt: j.fetched_at };
+}
+
+async function fetchAlarms() {
+  // 阶段七：按选中城市涉及的省份去重查询
+  const provinces = [...new Set([...DATA.cities.values()].map(c => c.province).filter(Boolean))];
+  for (const c of DATA.cities.values()) {
+    if (c.warn) c.alarms.push({ title: c.warn.title, url: c.warn.url, issuetime: "", level: alarmLevel(c.warn.title) });
+  }
+  await Promise.allSettled(provinces.map(async prov => {
+    const url = `https://www.nmc.cn/rest/findAlarm?pageNo=1&pageSize=200&signaltype=&signallevel=&province=${encodeURIComponent(prov)}`;
+    const j = await (await fetch(url)).json();
+    const list = j.data && j.data.page && j.data.page.list || [];
+    for (const [name, c] of DATA.cities) {
+      if (c.province !== prov) continue;
+      for (const a of list) {
+        if (!a.title.includes(name)) continue;
+        if (c.alarms.some(x => x.title === a.title)) continue;
+        c.alarms.push({ title: a.title, url: "https://www.nmc.cn" + a.url,
+                        issuetime: a.issuetime, level: alarmLevel(a.title) });
+      }
+    }
+  }));
+}
+function alarmLevel(title) {
+  if (title.includes("红色")) return "red";
+  if (title.includes("橙色")) return "orange";
+  if (title.includes("黄色")) return "yellow";
+  return "blue";
+}
+const LEVEL_LABEL = { red: "红", orange: "橙", yellow: "黄", blue: "蓝" };
+
+/* ================= 节假日与快捷日期（阶段三） ================= */
+function holidayRanges() {
+  // 平铺日期→节日名 聚合成连续区间
+  const dates = Object.keys(HOLIDAYS).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+  const ranges = [];
+  for (const d of dates) {
+    const name = HOLIDAYS[d];
+    const last = ranges[ranges.length - 1];
+    if (last && last.name === name &&
+        (parseIso(d) - parseIso(last.to)) / 864e5 === 1) last.to = d;
+    else ranges.push({ name, from: d, to: d });
+  }
+  return ranges;
+}
+function nextHoliday() {
+  const today = iso(new Date());
+  return holidayRanges().find(r => r.to >= today) || null;
+}
+function weekendRange(weeksAhead) {
+  const now = new Date();
+  const dow = now.getDay();                    // 0=周日
+  const sat = new Date(now);
+  sat.setDate(now.getDate() + ((6 - dow + 7) % 7) + weeksAhead * 7);
+  const sun = new Date(sat); sun.setDate(sat.getDate() + 1);
+  return { from: iso(sat), to: iso(sun) };
+}
+function setRange(r) { $("date-from").value = r.from; $("date-to").value = r.to; onFilterChange(); }
+
+/* ================= 筛选与汇总（与 filter_weather.py 一致） ================= */
+function currentCriteria() {
+  const f = readFilters();
+  const num = s => s === "" ? null : parseFloat(s);
+  return {
+    from: f.from || null, to: f.to || null,
+    maxRain: f.rain === "" || f.rain === "4" ? null : parseInt(f.rain) - 1,
+    maxDay: num(f.maxday), minNight: num(f.minnight),
+    need: f.need === "" ? null : parseInt(f.need),
+    hours: num(f.hours), mode: f.mode || "any",
+  };
+}
+function dayOk(d, c) {
+  if (c.maxRain !== null && d.tier > c.maxRain) return false;
+  if (c.maxDay !== null && d.dayTemp !== null && d.dayTemp > c.maxDay) return false;
+  if (c.minNight !== null && d.nightTemp !== null && d.nightTemp < c.minNight) return false;
+  return true;
+}
+function travelOk(name, c) {
+  if (c.hours === null) return true;
+  const t = TRAVEL[name]; if (!t) return false;
+  const modes = c.mode === "any" ? ["train","flight","drive"] : [c.mode];
+  return modes.some(m => typeof t[m] === "number" && t[m] <= c.hours);
+}
+function summarize() {
+  const c = currentCriteria();
+  const allDates = [...new Set([...DATA.cities.values()].flatMap(x => x.days.map(d => d.date)))].sort();
+  const days = allDates.filter(d => (!c.from || d >= c.from) && (!c.to || d <= c.to));
+  const need = c.need !== null ? c.need : days.length;
+  const summaries = [], filtered = [];
+  for (const [name, cd] of DATA.cities) {
+    if (!travelOk(name, c)) { filtered.push(name); continue; }
+    const daymap = new Map(cd.days.map(d => [d.date, d]));
+    const present = days.filter(d => daymap.has(d)).map(d => daymap.get(d));
+    if (!present.length) continue;
+    const okDays = present.filter(d => dayOk(d, c));
+    if (okDays.length < need) { filtered.push(name); continue; }
+    const dayTemps = present.map(d => d.dayTemp).filter(v => v !== null);
+    const nightTemps = present.map(d => d.nightTemp).filter(v => v !== null);
+    summaries.push({
+      name, province: cd.province, cd,
+      ok: okDays.length, nDays: days.length,
+      daily: days.map(d => {
+        const dd = daymap.get(d);
+        return { date: d, icon: dd ? RAIN_ICONS[dd.tier] : "—", ok: dd ? dayOk(dd, c) : false };
+      }),
+      worst: Math.max(...present.map(d => d.tier)),
+      dayLo: dayTemps.length ? Math.min(...dayTemps) : null,
+      dayHi: dayTemps.length ? Math.max(...dayTemps) : null,
+      nightLo: nightTemps.length ? Math.min(...nightTemps) : null,
+      nightHi: nightTemps.length ? Math.max(...nightTemps) : null,
+      totalPrecip: present.reduce((s, d) => s + (d.precip || 0), 0),
+    });
+  }
+  // 达标天数多→少, 综合雨况好→差, 白天最高温低→高 (温度缺失的排最后)
+  summaries.sort((a, b) => b.ok - a.ok || a.worst - b.worst || (a.dayHi ?? 999) - (b.dayHi ?? 999));
+  return { summaries, days, need, total: DATA.cities.size, filteredCount: filtered.length };
+}
+
+/* ================= 快照与变更对比（阶段五） ================= */
+function buildSnapshot() {
+  const cities = {};
+  for (const [name, cd] of DATA.cities) {
+    cities[name] = {};
+    for (const d of cd.days)
+      cities[name][d.date] = { w: `${d.dayInfo}/${d.nightInfo}`, t: d.tier, dt: d.dayTemp, nt: d.nightTemp, p: d.precip };
+  }
+  return { time: new Date().toISOString(), cities };
+}
+function diffSnapshots(oldS, newS) {
+  const worse = [], better = [], info = [];
+  LAST_DIFF = {};
+  for (const name of Object.keys(newS.cities)) {
+    if (!oldS.cities[name]) { info.push(`➕ 新增城市 ${name}`); continue; }
+    const oldDays = oldS.cities[name], newDays = newS.cities[name];
+    for (const [date, nd] of Object.entries(newDays)) {
+      const od = oldDays[date];
+      if (!od) continue;
+      const label = `${name} ${wday(date)}(${mmdd(date)})`;
+      if (nd.t > od.t) {
+        worse.push({ sev: 100 + (nd.t - od.t),
+          text: `${label} ${RAIN_ICONS[od.t]}→${RAIN_ICONS[nd.t]} ${od.w}→${nd.w} ⚠️` });
+        LAST_DIFF[`${name}|${date}`] = "worse";
+      } else if (nd.t < od.t) {
+        better.push(`${label} ${RAIN_ICONS[od.t]}→${RAIN_ICONS[nd.t]} ${od.w}→${nd.w} ✓`);
+        LAST_DIFF[`${name}|${date}`] = "better";
+      } else {
+        if (nd.dt !== null && od.dt !== null && Math.abs(nd.dt - od.dt) >= 3)
+          worse.push({ sev: 50, text: `${label} 高温 ${od.dt}→${nd.dt}°C` });
+        if (nd.nt !== null && od.nt !== null && Math.abs(nd.nt - od.nt) >= 3)
+          worse.push({ sev: 50, text: `${label} 低温 ${od.nt}→${nd.nt}°C` });
+      }
+    }
+    for (const date of Object.keys(oldDays))
+      if (!newDays[date]) info.push(`📅 ${name} ${mmdd(date)} 已无预报数据`);
+  }
+  for (const name of Object.keys(oldS.cities))
+    if (!newS.cities[name]) info.push(`➖ 移除城市 ${name}`);
+  worse.sort((a, b) => b.sev - a.sev);
+  return { worse: worse.map(x => x.text), better, info };
+}
+function renderChanges(diff, baseTime) {
+  const box = $("changes");
+  if (!diff || (!diff.worse.length && !diff.better.length && !diff.info.length)) {
+    box.classList.add("hidden"); return;
+  }
+  box.classList.remove("hidden");
+  const base = new Date(baseTime);
+  const stale = (Date.now() - base.getTime()) > 24 * 3600e3;
+  $("changes-base").textContent = stale
+    ? `对比基准为 ${base.getMonth()+1} 月 ${base.getDate()} 日 ${String(base.getHours()).padStart(2,"0")}:${String(base.getMinutes()).padStart(2,"0")} 的数据` : "";
+  const ul = $("changes-list"); ul.innerHTML = "";
+  for (const t of diff.worse) { const li = document.createElement("li"); li.className = "worse"; li.textContent = t; ul.appendChild(li); }
+  for (const t of diff.info) { const li = document.createElement("li"); li.className = "info"; li.textContent = t; ul.appendChild(li); }
+  const bw = $("changes-better-wrap"), bu = $("changes-better");
+  bu.innerHTML = "";
+  if (diff.better.length) {
+    bw.classList.remove("hidden");
+    for (const t of diff.better) { const li = document.createElement("li"); li.className = "better"; li.textContent = t; bu.appendChild(li); }
+  } else bw.classList.add("hidden");
+}
+
+/* ================= 汇总表渲染 ================= */
+function fmtRange(lo, hi) {
+  if (lo === null || hi === null) return "—";
+  return `${lo.toFixed(0)}~${hi.toFixed(0)}°C`;
+}
+function fmtTemp(v) { return v === null || v === undefined ? "—" : `${v}°`; }
+function fmtTravel(name) {
+  const t = TRAVEL[name]; if (!t) return "";
+  const parts = [];
+  if (typeof t.train === "number") parts.push(`高铁${t.train}h`);
+  if (typeof t.flight === "number") parts.push(`飞机${t.flight}h`);
+  if (typeof t.drive === "number") parts.push(`自驾${t.drive}h`);
+  return parts.join(" ");
+}
+function alarmBadges(cd) {
+  if (!cd.alarms.length) return "";
+  const levels = [...new Set(cd.alarms.map(a => a.level))];
+  const order = { red: 0, orange: 1, yellow: 2, blue: 3 };
+  levels.sort((a, b) => order[a] - order[b]);
+  return levels.map(l => `<span class="badge ${l}">${LEVEL_LABEL[l]}${cd.alarms.filter(a => a.level === l).length}</span>`).join("");
+}
+function renderTable(res) {
+  const tb = $("summary-body"); tb.innerHTML = "";
+  for (const name of DATA.missingCities) {
+    const tr = document.createElement("tr"); tr.className = "missing";
+    tr.innerHTML = `<td>${name}</td><td colspan="9" class="wrap">❌ 站点代码未收录/已失效，请本地运行 python3 nmc_weather.py refresh 后将新 stations.json 提交部署</td>`;
+    tb.appendChild(tr);
+  }
+  for (const s of res.summaries) {
+    const cd = s.cd;
+    const tr = document.createElement("tr"); tr.className = "city-row";
+    const dailyHtml = s.daily.map(d => {
+      const hl = LAST_DIFF && LAST_DIFF[`${s.name}|${d.date}`];
+      const cls = hl === "worse" ? ' class="worse"' : hl === "better" ? ' class="better"' : "";
+      return `<span${cls}>${d.date.slice(8)}${d.icon}${d.ok ? "" : "✗"}</span>`;
+    }).join(" ");
+    tr.innerHTML =
+      `<td>${s.name}</td><td>${s.ok}/${s.nDays}</td><td>${dailyHtml}</td>` +
+      `<td>${RAIN_LABELS[s.worst]}</td>` +
+      `<td>${fmtRange(s.dayLo, s.dayHi)}</td>` +
+      `<td>${fmtRange(s.nightLo, s.nightHi)}</td>` +
+      `<td>${s.totalPrecip.toFixed(1)}mm</td>` +
+      `<td>${cd.publishTime || "—"}</td>` +
+      `<td>${fmtTravel(s.name)}</td>` +
+      `<td>${alarmBadges(cd)}</td>`;
+    const dr = document.createElement("tr"); dr.className = "detail-row hidden";
+    dr.innerHTML = `<td colspan="10">${detailHtml(cd)}</td>`;
+    tr.addEventListener("click", () => dr.classList.toggle("hidden"));
+    tb.appendChild(tr); tb.appendChild(dr);
+  }
+  $("result-meta").textContent =
+    `✅ 符合条件: ${res.summaries.length} / ${res.total} 个城市` +
+    (res.days.length ? ` (${mmdd(res.days[0])}~${mmdd(res.days[res.days.length-1])}, 至少 ${res.need}/${res.days.length} 天达标)` : "") +
+    ` —— 点击城市行展开详情`;
+}
+function detailHtml(cd) {
+  const esc = s => String(s ?? "").replace(/[&<>]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[m]));
+  const parts = [];
+  if (cd.feelst != null) parts.push(`体感 ${cd.feelst}°C`);
+  if (cd.humidity != null) parts.push(`湿度 ${cd.humidity}%`);
+  if (cd.comfort) parts.push(`舒适度 ${cd.comfort}`);
+  if (cd.aqi != null) parts.push(`AQI ${cd.aqi} ${cd.aqiText || ""}`);
+  if (cd.sunrise) parts.push(`日出 ${cd.sunrise.slice(11)} / 日落 ${cd.sunset.slice(11)}`);
+  if (cd.realPublishTime) parts.push(`实况发布 ${cd.realPublishTime}`);
+  let html = `<div>🏙 ${esc(cd.province)} ${esc(cd.name)}（${esc(cd.code)}）：${parts.join(" ｜ ")}</div>`;
+  html += `<div style="margin-top:4px">逐日：` + cd.days.map(d =>
+    `${mmdd(d.date)} ${esc(d.dayInfo)}${fmtTemp(d.dayTemp)}/${esc(d.nightInfo)}${fmtTemp(d.nightTemp)} ${esc(d.dayWindD)}${esc(d.dayWindP)} 降水${d.precip}mm`).join("<br>") + `</div>`;
+  if (cd.alarms.length) {
+    html += `<div style="margin-top:4px">⚠️ 预警：` + cd.alarms.map(a =>
+      `<div>· <span class="badge ${a.level}">${LEVEL_LABEL[a.level]}</span> ` +
+      `<a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.title)}</a> ${esc(a.issuetime)}</div>`).join("") + `</div>`;
+  }
+  return html;
+}
+function renderPublishHint() {
+  // 发报时间明显滞后（与多数城市差一个批次）提示
+  const times = [...DATA.cities.values()].map(c => c.publishTime).filter(Boolean);
+  if (times.length < 2) return;
+  const ts = times.map(t => new Date(t.replace(" ", "T")).getTime());
+  const max = Math.max(...ts);
+  const lagged = [...DATA.cities.values()]
+    .filter(c => c.publishTime && (max - new Date(c.publishTime.replace(" ", "T")).getTime()) >= 6 * 3600e3)
+    .map(c => `${c.name}(${c.publishTime})`);
+  $("publish-hint").textContent = lagged.length
+    ? `⚠️ 以下城市发报时间明显滞后，可能未更新到最新批次：${lagged.join("、")}` : "";
+}
+
+/* ================= 文本汇总复制（阶段四，与 CLI 同格式） ================= */
+let LAST_RESULT = null;
+function buildTextSummary() {
+  const res = LAST_RESULT; if (!res) return "";
+  const lines = [];
+  lines.push(`符合条件: ${res.summaries.length} / ${res.total} 个城市` +
+    (res.days.length ? ` (${mmdd(res.days[0])}~${mmdd(res.days[res.days.length-1])}, 至少 ${res.need}/${res.days.length} 天达标)` : ""));
+  lines.push("城市\t达标\t逐日雨况(✗=不达标)\t综合雨况\t白天温度\t夜间温度\t总降水\t发报时间");
+  for (const s of res.summaries) {
+    const daily = s.daily.map(d => `${d.date.slice(8)}${d.icon}${d.ok ? "" : "✗"}`).join(" ");
+    lines.push([s.name, `${s.ok}/${s.nDays}`, daily, RAIN_LABELS[s.worst],
+      fmtRange(s.dayLo, s.dayHi), fmtRange(s.nightLo, s.nightHi),
+      `${s.totalPrecip.toFixed(1)}mm`, s.cd.publishTime || "—"].join("\t"));
+  }
+  return lines.join("\n");
+}
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; }
+  catch {
+    const ta = document.createElement("textarea");
+    ta.value = t; document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand("copy"); ta.remove(); return ok;
+  }
+}
+
+/* ================= 城市管理面板（阶段二） ================= */
+function provinceGroups() {
+  const groups = new Map();
+  for (const info of Object.values(STATIONS)) {
+    if (!groups.has(info.province)) groups.set(info.province, []);
+    groups.get(info.province).push(info.city);
+  }
+  for (const list of groups.values()) list.sort();
+  return [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0], "zh"));
+}
+function renderCityTree(filter) {
+  const tree = $("city-tree"); tree.innerHTML = "";
+  const kw = (filter || "").trim();
+  for (const [prov, cities] of provinceGroups()) {
+    const shown = kw ? cities.filter(c => c.includes(kw)) : cities;
+    if (!shown.length) continue;
+    const div = document.createElement("div");
+    div.className = "prov" + (kw ? " open" : "");
+    const sel = shown.filter(c => CITIES.includes(c)).length;
+    div.innerHTML = `<div class="prov-head">▸ ${prov}（${sel}/${shown.length}）</div>
+      <div class="prov-cities">${shown.map(c =>
+        `<label><input type="checkbox" data-city="${c}" ${CITIES.includes(c) ? "checked" : ""}>${c}</label>`).join("")}</div>`;
+    div.querySelector(".prov-head").addEventListener("click", () => div.classList.toggle("open"));
+    div.querySelectorAll("input[type=checkbox]").forEach(cb => cb.addEventListener("change", () => {
+      const city = cb.dataset.city;
+      if (cb.checked && !CITIES.includes(city)) CITIES.push(city);
+      if (!cb.checked) CITIES = CITIES.filter(x => x !== city);
+      lsSet(LS.cities, CITIES);
+      div.querySelector(".prov-head").textContent =
+        `▸ ${prov}（${shown.filter(c => CITIES.includes(c)).length}/${shown.length}）`;
+    }));
+    tree.appendChild(div);
+  }
+}
+
+/* ================= 出行数据面板（阶段六） ================= */
+function renderTravelPanel() {
+  const box = $("travel-list"); box.innerHTML = "";
+  const names = [...new Set([...CITIES, ...Object.keys(TRAVEL)])];
+  for (const name of names) {
+    const t = TRAVEL[name] || {};
+    const row = document.createElement("div");
+    row.style.margin = "4px 0";
+    row.innerHTML = `<b>${name}</b> ` + ["train","flight","drive"].map(m =>
+      ` <label>${{ train: "高铁", flight: "飞机", drive: "自驾" }[m]}<input type="number" step="0.5" min="0" style="width:64px" data-city="${name}" data-mode="${m}" value="${typeof t[m] === "number" ? t[m] : ""}"></label>`).join("");
+    row.querySelectorAll("input").forEach(inp => inp.addEventListener("change", () => {
+      const c = inp.dataset.city, m = inp.dataset.mode;
+      if (!TRAVEL[c]) TRAVEL[c] = {};
+      if (inp.value === "") delete TRAVEL[c][m]; else TRAVEL[c][m] = parseFloat(inp.value);
+      if (!Object.keys(TRAVEL[c]).length) delete TRAVEL[c];
+      lsSet(LS.travel, TRAVEL);
+    }));
+    box.appendChild(row);
+  }
+}
+
+/* ================= 温度走势图（阶段八） ================= */
+const PALETTE = ["#2563eb","#dc2626","#16a34a","#9333ea","#ea580c","#0891b2","#be185d","#65a30d"];
+function renderChartPicker() {
+  // 可勾选城市 = 当前筛选结果中的城市, 重绘时保留仍存在的勾选项
+  const box = $("chart-pick");
+  const prevChecked = new Set([...box.querySelectorAll("input:checked")].map(x => x.value));
+  box.innerHTML = "";
+  const names = (LAST_RESULT ? LAST_RESULT.summaries : []).map(s => s.name);
+  for (const name of names) {
+    const lab = document.createElement("label");
+    lab.innerHTML = `<input type="checkbox" value="${name}" ${prevChecked.has(name) ? "checked" : ""}>${name}`;
+    lab.querySelector("input").addEventListener("change", drawChart);
+    box.appendChild(lab);
+  }
+  if (!names.length) box.textContent = "（当前筛选无符合城市）";
+}
+function drawChart() {
+  const picked = [...$("chart-pick").querySelectorAll("input:checked")].map(x => x.value);
+  const datasets = [];
+  let labels = [];
+  const todayStr = iso(new Date()).replace(/-/g, "/");
+  picked.forEach((name, i) => {
+    const cd = DATA.cities.get(name); if (!cd || !cd.tempchart.length) return;
+    // 只画今天起的 7 天预报 (tempchart 前 7 条为历史实况, 剔除)
+    const tc = cd.tempchart.filter(x => x.time >= todayStr);
+    labels = tc.map(x => x.time.slice(5).replace("/", "-"));
+    const color = PALETTE[i % PALETTE.length];
+    datasets.push({ label: `${name} 高温`, data: tc.map(x => x.max_temp), borderColor: color, backgroundColor: color, tension: 0.3 });
+    datasets.push({ label: `${name} 低温`, data: tc.map(x => x.min_temp), borderColor: color, backgroundColor: color, borderDash: [6, 4], tension: 0.3 });
+  });
+  if (chart) chart.destroy();
+  chart = new Chart($("temp-chart"), {
+    type: "line",
+    data: { labels, datasets },
+    options: { responsive: true, interaction: { mode: "index", intersect: false },
+      scales: { y: { title: { display: true, text: "°C" } } } },
+  });
+}
+
+/* ================= 主流程 ================= */
+async function refresh() {
+  $("global-err").textContent = "";
+  $("fetch-meta").textContent = "🔄 正在并发抓取各城市预报…";
+  $("btn-refresh").disabled = true;
+  try {
+    let result, source = "live", fetchedAt = new Date();
+    try {
+      result = await fetchLive();
+      if (!result.cities.size) throw new Error("所有城市直连均失败");
+    } catch (e) {
+      // 阶段九：直连失败回退 data.json 快照
+      try {
+        result = await fetchSnapshotFallback();
+        source = "snapshot";
+        fetchedAt = result.fetchedAt ? new Date(result.fetchedAt.replace(" ", "T")) : fetchedAt;
+      } catch (e2) {
+        $("fetch-meta").textContent = "";
+        $("global-err").textContent = `❌ NMC 接口请求失败（${e.message}），且无可用的 data.json 快照（${e2.message}）。接口可能已变更或网络异常。`;
+        return;
+      }
+    }
+    DATA = {
+      cities: result.cities, missingCities: result.missing,
+      source, fetchedAt,
+      fetchTime: new Date(),
+    };
+    if (source === "live") await fetchAlarms().catch(() => {});
+
+    // 阶段五：与上次快照对比，然后轮转保存
+    const snaps = lsGet(LS.snap, { prev: null, curr: null });
+    const newSnap = buildSnapshot();
+    LAST_DIFF = null;
+    if (snaps.curr && source === "live") renderChanges(diffSnapshots(snaps.curr, newSnap), snaps.curr.time);
+    else $("changes").classList.add("hidden");
+    if (source === "live") lsSet(LS.snap, { prev: snaps.curr, curr: newSnap });
+
+    const now = new Date();
+    $("fetch-meta").textContent = source === "live"
+      ? `✅ 本次抓取时刻：${iso(now)} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")} ｜ 成功 ${DATA.cities.size} 城` +
+        (DATA.missingCities.length ? ` ｜ 未收录 ${DATA.missingCities.length} 城` : "") +
+        (result.errors.length ? ` ｜ 失败 ${result.errors.length} 城` : "")
+      : `⚠️ 直连 NMC 失败，显示数据快照（更新于 ${result.fetchedAt || "未知"}）`;
+    if (result.errors.length)
+      $("global-err").textContent = `部分城市抓取失败：${result.errors.slice(0, 3).join("；")}`;
+
+    renderPublishHint();
+    renderAll();
+  } finally {
+    $("btn-refresh").disabled = false;
+  }
+}
+function renderAll() {
+  LAST_RESULT = summarize();
+  renderTable(LAST_RESULT);
+  renderChartPicker();
+  if (!$("chart-section").classList.contains("hidden")) drawChart();
+}
+function onFilterChange() {
+  lsSet(LS.filters, readFilters());
+  if (DATA) renderAll();
+}
+
+/* ================= 事件绑定与初始化 ================= */
+function bindEvents() {
+  for (const id of ["date-from","date-to","max-rain","max-day","min-night","need","travel-hours","travel-mode"])
+    $(id).addEventListener("change", onFilterChange);
+  $("btn-refresh").addEventListener("click", refresh);
+  $("btn-this-weekend").addEventListener("click", () => setRange(weekendRange(0)));
+  $("btn-next-weekend").addEventListener("click", () => setRange(weekendRange(1)));
+  $("btn-next-holiday").addEventListener("click", () => {
+    const h = nextHoliday();
+    if (h) setRange(h); else toast("假期数据待更新，暂无法使用", true);
+  });
+  $("btn-share").addEventListener("click", async () => {
+    const url = location.origin + location.pathname + encodeHash();
+    history.replaceState(null, "", encodeHash());
+    toast(await copyText(url) ? "✅ 分享链接已复制" : "复制失败", false);
+  });
+  $("btn-copy-text").addEventListener("click", async () => {
+    toast(await copyText(buildTextSummary()) ? "✅ 文本汇总已复制" : "复制失败", false);
+  });
+  $("clear-base").addEventListener("click", () => {
+    lsSet(LS.snap, { prev: null, curr: null });
+    LAST_DIFF = null; $("changes").classList.add("hidden"); renderAll();
+    toast("已清除对比基准");
+  });
+  // 城市管理
+  $("btn-cities").addEventListener("click", () => {
+    const p = $("city-panel");
+    p.classList.toggle("hidden");
+    $("btn-cities").classList.toggle("active", !p.classList.contains("hidden"));
+    if (!p.classList.contains("hidden")) renderCityTree($("city-search").value);
+  });
+  $("city-search").addEventListener("input", e => renderCityTree(e.target.value));
+  $("city-all").addEventListener("click", () => {
+    const kw = $("city-search").value.trim();
+    for (const info of Object.values(STATIONS))
+      if (!kw || info.city.includes(kw)) if (!CITIES.includes(info.city)) CITIES.push(info.city);
+    lsSet(LS.cities, CITIES); renderCityTree(kw);
+  });
+  $("city-none").addEventListener("click", () => { CITIES = []; lsSet(LS.cities, CITIES); renderCityTree($("city-search").value); });
+  $("city-default").addEventListener("click", () => { CITIES = DEFAULT_CITIES.slice(); lsSet(LS.cities, CITIES); renderCityTree($("city-search").value); toast("已恢复默认城市列表"); });
+  $("city-export").addEventListener("click", async () => {
+    const ta = $("city-text"); ta.classList.remove("hidden");
+    ta.value = CITIES.join("\n");
+    toast(await copyText(ta.value) ? "✅ 城市列表已复制（与 cities.txt 格式互通）" : "已展开文本，请手动复制");
+  });
+  $("city-import").addEventListener("click", () => {
+    const ta = $("city-text");
+    if (ta.classList.contains("hidden")) { ta.classList.remove("hidden"); ta.value = CITIES.join("\n"); toast("编辑后再次点击“导入文本”生效"); return; }
+    const names = ta.value.split("\n").map(s => s.trim()).filter(s => s && !s.startsWith("#"));
+    CITIES = [...new Set(names)];
+    lsSet(LS.cities, CITIES); ta.classList.add("hidden");
+    renderCityTree($("city-search").value); toast(`已导入 ${CITIES.length} 个城市`);
+  });
+  // 出行数据
+  $("btn-travel").addEventListener("click", () => {
+    const p = $("travel-panel");
+    p.classList.toggle("hidden");
+    $("btn-travel").classList.toggle("active", !p.classList.contains("hidden"));
+    if (!p.classList.contains("hidden")) renderTravelPanel();
+  });
+  $("travel-export").addEventListener("click", async () => {
+    const ta = $("travel-text"); ta.classList.remove("hidden");
+    ta.value = JSON.stringify(TRAVEL, null, 1);
+    toast(await copyText(ta.value) ? "✅ 出行数据 JSON 已复制" : "已展开文本，请手动复制");
+  });
+  $("travel-import").addEventListener("click", () => {
+    const ta = $("travel-text");
+    if (ta.classList.contains("hidden")) { ta.classList.remove("hidden"); ta.value = JSON.stringify(TRAVEL, null, 1); toast("编辑后再次点击“导入 JSON”生效"); return; }
+    try {
+      const j = JSON.parse(ta.value);
+      for (const [c, t] of Object.entries(j))
+        for (const m of Object.keys(t)) if (!["train","flight","drive"].includes(m)) delete t[m];
+      TRAVEL = j; lsSet(LS.travel, TRAVEL);
+      ta.classList.add("hidden"); renderTravelPanel(); toast("已导入出行数据");
+    } catch { toast("JSON 格式错误", true); }
+  });
+  // 温度走势
+  $("btn-chart").addEventListener("click", () => {
+    const p = $("chart-section");
+    p.classList.toggle("hidden");
+    $("btn-chart").classList.toggle("active", !p.classList.contains("hidden"));
+    if (!p.classList.contains("hidden") && DATA) { renderChartPicker(); drawChart(); }
+  });
+}
+async function init() {
+  bindEvents();
+  const hasHash = decodeHash();
+  if (!hasHash) {
+    applyFilters(lsGet(LS.filters, {}));
+    // 周四/周五打开默认选中"本周末"（无已存条件时）
+    const dow = new Date().getDay();
+    if ((dow === 4 || dow === 5) && !$("date-from").value) {
+      const r = weekendRange(0);
+      $("date-from").value = r.from; $("date-to").value = r.to;
+    }
+  }
+  // 节假日数据过期降级
+  try {
+    HOLIDAYS = await (await fetch("holidays.json", { cache: "no-store" })).json();
+    if (!nextHoliday()) {
+      $("btn-next-holiday").disabled = true;
+      $("holiday-hint").textContent = "⚠️ 假期数据待更新（holidays.json 未覆盖当前日期）";
+    }
+  } catch {
+    $("btn-next-holiday").disabled = true;
+    $("holiday-hint").textContent = "⚠️ holidays.json 加载失败，假期快捷按钮不可用";
+  }
+  try {
+    STATIONS = await (await fetch("stations.json")).json();
+  } catch (e) {
+    $("fetch-meta").textContent = "";
+    $("global-err").textContent = `❌ stations.json 加载失败：${e.message}。请确认站点缓存已随页面一起部署。`;
+    return;
+  }
+  await refresh();
+}
+init();
+</script>
+</body>
+</html>
