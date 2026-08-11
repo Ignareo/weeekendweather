@@ -6,67 +6,202 @@
 <title>周末去哪 · 天气筛选</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
-  :root { --red:#fde8e8; --green:#e6f6e6; --border:#ddd; --ink:#333; }
+  :root {
+    --bg: #f2f5fa; --surface: #ffffff; --surface-2: #f7f9fc;
+    --border: #e4e9f2; --ink: #1e293b; --ink-2: #5b6b83; --ink-3: #94a3b8;
+    --primary: #4f46e5; --primary-hover: #4338ca; --primary-soft: #eceefe;
+    --ok: #15803d; --ok-soft: #e5f6ec;
+    --warn: #b45309; --warn-soft: #fdf2e0;
+    --err: #dc2626; --err-soft: #fdecec;
+    --radius: 14px; --radius-sm: 9px;
+    --shadow: 0 1px 2px rgba(15,23,42,.05), 0 6px 20px rgba(15,23,42,.06);
+    --shadow-sm: 0 1px 2px rgba(15,23,42,.07);
+    --hero-grad: linear-gradient(135deg, #4f46e5 0%, #6d5df1 45%, #0ea5e9 100%);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c1220; --surface: #141c30; --surface-2: #1a2440;
+      --border: #263353; --ink: #e6ecf7; --ink-2: #9fb0cc; --ink-3: #6b7c9c;
+      --primary: #7c74ff; --primary-hover: #8f89ff; --primary-soft: #232a55;
+      --ok: #4ade80; --ok-soft: rgba(34,197,94,.16);
+      --warn: #fbbf24; --warn-soft: rgba(245,158,11,.15);
+      --err: #f87171; --err-soft: rgba(239,68,68,.16);
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+      --hero-grad: linear-gradient(135deg, #312e81 0%, #4338ca 50%, #0369a1 100%);
+    }
+  }
   * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
   body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-         margin: 0 auto; max-width: 1180px; padding: 12px 16px; color: var(--ink); }
-  h1 { font-size: 22px; margin: 8px 0 4px; }
-  h2 { font-size: 16px; margin: 14px 0 8px; }
-  .src-note { color: #888; font-size: 12px; margin: 0 0 8px; }
-  .meta { color: #555; font-size: 13px; margin: 4px 0; }
-  .warn-text { color: #b45309; font-size: 13px; }
-  button { cursor: pointer; border: 1px solid var(--border); background: #fff;
-           border-radius: 6px; padding: 5px 10px; font-size: 13px; }
-  button:hover { background: #f3f4f6; }
-  button.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
-  button.primary:hover { background: #1d4ed8; }
-  button.active { background: #2563eb; border-color: #2563eb; color: #fff; }
-  button.active:hover { background: #1d4ed8; }
-  input, select, textarea { border: 1px solid var(--border); border-radius: 6px;
-           padding: 5px 8px; font-size: 13px; font-family: inherit; }
-  input[type=date], input[type=number] { width: 140px; }
-  input[type=number] { width: 80px; }
-  #controls .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
-  #controls label { font-size: 13px; color: #555; display: flex; align-items: center; gap: 4px; }
-  table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 8px; }
-  th, td { border: 1px solid var(--border); padding: 6px 8px; text-align: left;
-           white-space: nowrap; }
-  th { background: #f8fafc; position: sticky; top: 0; }
+         margin: 0 auto; max-width: 1180px; padding: 0 16px 32px;
+         color: var(--ink); background: var(--bg); line-height: 1.55; }
+  h2 { font-size: 15px; margin: 0 0 10px; }
+  .meta { color: var(--ink-2); font-size: 13px; margin: 4px 0; }
+  .warn-text { color: var(--warn); font-size: 13px; }
+  .err { color: var(--err); font-size: 13px; }
+  .ok-text { color: var(--ok); font-size: 13px; }
+
+  /* ---------- 顶部 Hero ---------- */
+  .hero { margin: 0 -16px 18px; padding: 28px 24px 22px;
+          background: var(--hero-grad); color: #fff; border-radius: 0 0 22px 22px; }
+  .hero h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: .5px; }
+  .hero .src-note { color: rgba(255,255,255,.78); font-size: 12.5px; margin: 0 0 12px; }
+  .status-chip { display: inline-flex; align-items: center; gap: 6px;
+                 background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28);
+                 border-radius: 999px; padding: 5px 14px; font-size: 13px; }
+  .hero .warn-text { color: #fde68a; margin: 8px 0 0; }
+  .hero .err { color: #fecaca; margin: 8px 0 0; }
+
+  /* ---------- 按钮 / 输入 ---------- */
+  button { cursor: pointer; border: 1px solid var(--border); background: var(--surface);
+           color: var(--ink); border-radius: 999px; padding: 7px 15px; font-size: 13px;
+           font-family: inherit; box-shadow: var(--shadow-sm); transition: all .15s ease; }
+  button:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
+  button:active { transform: translateY(0); }
+  button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+  button.primary, button.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+  button.primary:hover, button.active:hover { background: var(--primary-hover);
+           border-color: var(--primary-hover); color: #fff; }
+  button:focus-visible, input:focus-visible, select:focus-visible,
+  textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  input, select, textarea { border: 1px solid var(--border); border-radius: var(--radius-sm);
+           padding: 7px 10px; font-size: 13.5px; font-family: inherit;
+           background: var(--surface); color: var(--ink);
+           transition: border-color .15s, box-shadow .15s; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary);
+           box-shadow: 0 0 0 3px var(--primary-soft); }
+  input[type=date] { width: 148px; }
+  input[type=number] { width: 84px; }
+  input[type=checkbox] { accent-color: var(--primary); width: 15px; height: 15px; }
+  input::placeholder { color: var(--ink-3); }
+  textarea { width: 100%; min-height: 70px; }
+
+  /* ---------- 面板与筛选区 ---------- */
+  .panel { background: var(--surface); border: 1px solid var(--border);
+           border-radius: var(--radius); box-shadow: var(--shadow);
+           padding: 16px 18px; margin: 14px 0; animation: panel-in .25s ease; }
+  @keyframes panel-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  #controls .row { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; margin: 10px 0; }
+  #controls label { font-size: 13px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .row-label { width: 100%; font-size: 11.5px; font-weight: 600; color: var(--ink-3);
+               letter-spacing: .6px; margin-bottom: -4px; }
+
+  /* ---------- 预警徽标 ---------- */
+  .badge { display: inline-flex; align-items: center; border-radius: 999px; font-size: 12px;
+           font-weight: 600; padding: 2px 9px; margin-right: 4px; cursor: pointer; }
+  .badge.blue { background: rgba(59,130,246,.15); color: #3b82f6; }
+  .badge.yellow { background: rgba(234,179,8,.18); color: #a16207; }
+  .badge.orange { background: rgba(249,115,22,.16); color: #ea580c; }
+  .badge.red { background: rgba(239,68,68,.15); color: #dc2626; }
+  @media (prefers-color-scheme: dark) {
+    .badge.blue { color: #60a5fa; } .badge.yellow { color: #facc15; }
+    .badge.orange { color: #fb923c; } .badge.red { color: #f87171; }
+  }
+
+  /* ---------- 结果表格（PC） ---------- */
+  #result-meta { font-size: 13.5px; color: var(--ink-2); font-weight: 500; margin: 16px 2px 0; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius);
+                box-shadow: var(--shadow); background: var(--surface); margin-top: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { padding: 9px 12px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--border); }
+  th { background: var(--surface-2); position: sticky; top: 0; z-index: 1;
+       font-size: 12px; font-weight: 600; color: var(--ink-2); letter-spacing: .3px; }
+  tbody tr:last-child td { border-bottom: none; }
   td.wrap, th.wrap { white-space: normal; }
-  tr.city-row { cursor: pointer; }
-  tr.city-row:hover { background: #f8fafc; }
-  tr.detail-row td { background: #fafafa; white-space: normal; font-size: 12px; color: #444; }
-  td.worse { background: var(--red); }
-  td.better { background: var(--green); }
-  tr.missing td { background: var(--red); color: #991b1b; }
-  .badge { display: inline-block; border-radius: 4px; color: #fff; font-size: 12px;
-           padding: 1px 6px; margin-right: 2px; cursor: pointer; }
-  .badge.blue { background: #3b82f6; } .badge.yellow { background: #eab308; }
-  .badge.orange { background: #f97316; } .badge.red { background: #ef4444; }
-  .panel { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin: 10px 0; }
+  tr.city-row { cursor: pointer; transition: background .12s; }
+  tr.city-row:hover { background: var(--primary-soft); }
+  tr.detail-row td { background: var(--surface-2); white-space: normal; font-size: 12.5px;
+                     color: var(--ink-2); line-height: 1.7; }
+  tr.missing td { background: var(--err-soft); color: var(--err); }
+  span.worse, td.worse { background: var(--err-soft); color: var(--err); border-radius: 6px; padding: 1px 5px; }
+  span.better, td.better { background: var(--ok-soft); color: var(--ok); border-radius: 6px; padding: 1px 5px; }
+
+  /* ---------- 结果卡片（移动端） ---------- */
+  #card-list { display: none; }
+  .city-card { background: var(--surface); border: 1px solid var(--border);
+               border-radius: var(--radius); box-shadow: var(--shadow); padding: 13px 15px; }
+  .city-card .cc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .city-card .cc-name { font-weight: 700; font-size: 15px; }
+  .city-card .cc-ok { font-size: 12px; font-weight: 600; color: var(--primary);
+                      background: var(--primary-soft); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+  .city-card .cc-daily { margin: 8px 0 6px; font-size: 13.5px; display: flex; flex-wrap: wrap; gap: 4px 10px; }
+  .city-card .cc-meta { font-size: 12.5px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
+  .city-card .cc-detail { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);
+                          font-size: 12.5px; color: var(--ink-2); line-height: 1.7; }
+  .city-card.missing { background: var(--err-soft); border-color: transparent; color: var(--err); font-size: 13px; }
+
+  /* ---------- 骨架屏 ---------- */
+  .skel { position: relative; overflow: hidden; background: var(--surface-2); border-radius: 8px; }
+  .skel::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+                 background: linear-gradient(90deg, transparent, rgba(148,163,184,.28), transparent);
+                 animation: shimmer 1.2s infinite; }
+  @keyframes shimmer { to { transform: translateX(100%); } }
+  .skel-line { height: 16px; margin: 6px 0; }
+  .skel-line.short { width: 55%; }
+  .skel-card { padding: 16px; }
+
+  /* ---------- Toast ---------- */
+  #toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 16px);
+           background: var(--ink); color: var(--bg); border-radius: 999px;
+           padding: 10px 20px; font-size: 13.5px; text-align: center; max-width: 88vw;
+           opacity: 0; pointer-events: none; transition: all .25s ease;
+           box-shadow: 0 8px 24px rgba(0,0,0,.25); z-index: 50; }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  #toast.err { background: var(--err); color: #fff; }
+
+  /* ---------- 变更面板 ---------- */
+  #changes ul { margin: 6px 0; padding-left: 20px; font-size: 13px; }
+  #changes li.worse { color: var(--err); }
+  #changes li.temp { color: var(--warn); }
+  #changes li.info { color: var(--ink-2); }
+  #changes li.better { color: var(--ok); }
+  #changes summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
+
+  /* ---------- 城市 / 出行面板 ---------- */
   .prov { margin: 4px 0; }
-  .prov-head { font-weight: 600; font-size: 13px; cursor: pointer; user-select: none; }
-  .prov-cities { display: none; flex-wrap: wrap; gap: 4px 12px; padding: 4px 0 4px 18px; font-size: 13px; }
-  .prov.open .prov-cities { display: flex; }
-  #changes ul { margin: 4px 0; padding-left: 20px; font-size: 13px; }
-  #changes li.worse { color: #b91c1c; }
-  #changes li.temp { color: #b45309; }
-  #changes li.info { color: #555; }
-  #changes li.better { color: #15803d; }
-  .err { color: #b91c1c; font-size: 13px; }
-  .ok-text { color: #15803d; font-size: 13px; }
-  #chart-section canvas { max-height: 420px; }
-  .chart-pick { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; margin: 6px 0; }
-  textarea { width: 100%; min-height: 70px; font-family: inherit; }
+  .prov-head { font-weight: 600; font-size: 13px; cursor: pointer; user-select: none;
+               padding: 6px 8px; border-radius: var(--radius-sm); }
+  .prov-head:hover { background: var(--surface-2); }
+  .prov-cities { display: none; flex-wrap: wrap; gap: 6px 14px; padding: 6px 0 8px 22px; font-size: 13px; }
+  .prov.open .prov-cities { display: flex; animation: panel-in .2s ease; }
+  .prov-cities label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  #travel-list > div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+                       padding: 7px 0; border-bottom: 1px dashed var(--border); font-size: 13px; }
+  #travel-list > div:last-child { border-bottom: none; }
+  #travel-list b { min-width: 64px; }
+  #travel-list label { display: flex; align-items: center; gap: 4px; color: var(--ink-2); }
+
+  /* ---------- 图表 ---------- */
+  #chart-section canvas { max-height: 400px; }
+  .chart-pick { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; margin: 8px 0; }
+  .chart-pick label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+
   .hidden { display: none !important; }
-  footer { margin: 24px 0 8px; color: #999; font-size: 12px; }
+  footer { margin: 26px 0 8px; color: var(--ink-3); font-size: 12px; text-align: center; }
+
+  /* ---------- 移动端 ---------- */
+  @media (max-width: 820px) {
+    .table-wrap { display: none; }
+    #card-list { display: grid; gap: 10px; margin-top: 10px; }
+  }
+  @media (max-width: 640px) {
+    body { padding: 0 10px 24px; }
+    .hero { margin: 0 -10px 14px; padding: 22px 16px 18px; border-radius: 0 0 18px 18px; }
+    .hero h1 { font-size: 21px; }
+    .panel { padding: 13px 14px; }
+    #controls .row { gap: 8px; }
+    input[type=date] { width: 136px; }
+    button { padding: 8px 14px; }
+    #chart-section canvas { max-height: 300px; }
+  }
 </style>
 </head>
 <body>
-<header>
+<header class="hero">
   <h1>🌤 周末去哪 · 天气筛选</h1>
   <p class="src-note">数据来源：中国气象台 nmc.cn 未公开接口，仅供个人学习使用</p>
-  <p class="meta" id="fetch-meta">正在加载…</p>
+  <span class="status-chip" id="fetch-meta">正在加载…</span>
   <p class="warn-text" id="publish-hint"></p>
   <p class="err" id="global-err"></p>
 </header>
@@ -83,13 +218,15 @@
 
 <section id="controls" class="panel">
   <div class="row">
-    <label>📅 <input type="date" id="date-from"> ~ <input type="date" id="date-to"></label>
+    <span class="row-label">📅 日期范围</span>
+    <label><input type="date" id="date-from"> ~ <input type="date" id="date-to"></label>
     <button id="btn-this-weekend">本周末</button>
     <button id="btn-next-weekend">下周末</button>
     <button id="btn-next-holiday" class="hidden">下个法定节假日</button>
     <span class="warn-text hidden" id="holiday-hint"></span>
   </div>
   <div class="row">
+    <span class="row-label">🎯 筛选条件</span>
     <label>🌧 雨天接受度
       <select id="max-rain">
         <option value="">不限</option>
@@ -110,13 +247,13 @@
       </select></label>
   </div>
   <div class="row">
+    <span class="row-label">⚙️ 操作</span>
     <button class="primary" id="btn-refresh">🔄 重新抓取</button>
     <button id="btn-share">🔗 复制分享链接</button>
     <button id="btn-copy-text">📋 复制文本汇总</button>
     <button id="btn-cities">🏙 城市管理</button>
     <button id="btn-travel">🚄 出行数据</button>
     <button id="btn-chart">📈 温度走势</button>
-    <span id="action-msg" class="ok-text"></span>
   </div>
 </section>
 
@@ -146,7 +283,7 @@
 
 <section id="result">
   <p class="meta" id="result-meta"></p>
-  <div style="overflow-x:auto">
+  <div class="table-wrap">
   <table id="summary">
     <thead><tr>
       <th>城市</th><th>达标</th><th>逐日雨况(✗=不达标)</th><th>综合雨况</th>
@@ -156,6 +293,7 @@
     <tbody id="summary-body"></tbody>
   </table>
   </div>
+  <div id="card-list"></div>
 </section>
 
 <section id="chart-section" class="panel hidden">
@@ -164,6 +302,7 @@
   <canvas id="temp-chart"></canvas>
 </section>
 
+<div id="toast" role="status"></div>
 <footer>
   Python CLI 保留可用：python3 filter_weather.py（详见 README.md）。站点代码失效时请本地运行
   python3 nmc_weather.py refresh 后提交新 stations.json。
@@ -188,9 +327,11 @@ const mmdd = s => s.slice(5);
 const wday = s => WEEKDAYS[parseIso(s).getDay()];
 
 function toast(msg, isErr) {
-  const el = $("action-msg");
-  el.textContent = msg; el.className = isErr ? "err" : "ok-text";
-  clearTimeout(toast._t); toast._t = setTimeout(() => el.textContent = "", 4000);
+  const el = $("toast");
+  el.textContent = msg;
+  el.className = "show" + (isErr ? " err" : "");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { el.className = ""; }, 3200);
 }
 
 /* ================= 雨况档位（与 filter_weather.py 一致） ================= */
@@ -565,6 +706,58 @@ function renderTable(res) {
     `✅ 符合条件: ${res.summaries.length} / ${res.total} 个城市` +
     (res.days.length ? ` (${mmdd(res.days[0])}~${mmdd(res.days[res.days.length-1])}, 至少 ${res.need}/${res.days.length} 天达标)` : "") +
     ` —— 点击城市行展开详情`;
+  renderCards(res);
+}
+/* 移动端城市卡片（与表格数据一致，窄屏时由 CSS 切换显示） */
+function renderCards(res) {
+  const box = $("card-list"); box.innerHTML = "";
+  for (const name of DATA.missingCities) {
+    const d = document.createElement("div");
+    d.className = "city-card missing";
+    d.textContent = `❌ ${name}：站点代码未收录/已失效`;
+    box.appendChild(d);
+  }
+  for (const s of res.summaries) {
+    const cd = s.cd;
+    const card = document.createElement("div"); card.className = "city-card";
+    const daily = s.daily.map(d => {
+      const hl = LAST_DIFF && LAST_DIFF[`${s.name}|${d.date}`];
+      const cls = hl === "worse" ? ' class="worse"' : hl === "better" ? ' class="better"' : "";
+      return `<span${cls}>${d.date.slice(8)}${d.icon}${d.ok ? "" : "✗"}</span>`;
+    }).join("");
+    const travel = fmtTravel(s.name);
+    card.innerHTML =
+      `<div class="cc-head"><span class="cc-name">${s.name}</span>` +
+      `<span class="cc-ok">达标 ${s.ok}/${s.nDays}</span></div>` +
+      `<div class="cc-daily">${daily}</div>` +
+      `<div class="cc-meta"><span>${RAIN_LABELS[s.worst]}</span>` +
+      `<span>🌡 ${fmtRange(s.dayLo, s.dayHi)} / ${fmtRange(s.nightLo, s.nightHi)}</span>` +
+      `<span>💧 ${s.totalPrecip.toFixed(1)}mm</span>` +
+      (travel ? `<span>🚄 ${travel}</span>` : "") +
+      (cd.alarms.length ? `<span>${alarmBadges(cd)}</span>` : "") +
+      `</div><div class="cc-detail hidden">${detailHtml(cd)}</div>`;
+    card.addEventListener("click", e => {
+      if (e.target.closest("a")) return;
+      card.querySelector(".cc-detail").classList.toggle("hidden");
+    });
+    box.appendChild(card);
+  }
+}
+/* 抓取中的骨架占位 */
+function showSkeleton() {
+  const tb = $("summary-body"); tb.innerHTML = "";
+  for (let i = 0; i < 6; i++) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="10"><div class="skel skel-line"></div></td>`;
+    tb.appendChild(tr);
+  }
+  const cl = $("card-list"); cl.innerHTML = "";
+  for (let i = 0; i < 4; i++) {
+    const d = document.createElement("div");
+    d.className = "city-card skel-card";
+    d.innerHTML = `<div class="skel skel-line"></div><div class="skel skel-line short"></div>`;
+    cl.appendChild(d);
+  }
 }
 function detailHtml(cd) {
   const esc = s => String(s ?? "").replace(/[&<>]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[m]));
@@ -697,6 +890,14 @@ function renderChartPicker() {
 }
 function drawChart() {
   const picked = [...$("chart-pick").querySelectorAll("input:checked")].map(x => x.value);
+  // 深色模式下调整图表文字/网格颜色
+  if (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) {
+    Chart.defaults.color = "#9fb0cc";
+    Chart.defaults.borderColor = "rgba(148,163,184,.18)";
+  } else {
+    Chart.defaults.color = "#666";
+    Chart.defaults.borderColor = "rgba(0,0,0,.1)";
+  }
   const datasets = [];
   let labels = [];
   const todayStr = iso(new Date()).replace(/-/g, "/");
@@ -723,6 +924,7 @@ async function refresh() {
   $("global-err").textContent = "";
   $("fetch-meta").textContent = "🔄 正在并发抓取各城市预报…";
   $("btn-refresh").disabled = true;
+  showSkeleton();
   try {
     let result, source = "live", fetchedAt = new Date();
     try {
@@ -737,6 +939,8 @@ async function refresh() {
       } catch (e2) {
         $("fetch-meta").textContent = "";
         $("global-err").textContent = `❌ NMC 接口请求失败（${e.message}），且无可用的 data.json 快照（${e2.message}）。接口可能已变更或网络异常。`;
+        $("summary-body").innerHTML = "";
+        $("card-list").innerHTML = "";
         return;
       }
     }
