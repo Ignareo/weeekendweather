@@ -5,201 +5,350 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>周末去哪 · 天气筛选</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;500;600&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 12.5a8 8 0 0 1 16 0 2 2 0 0 1-4 0 2 2 0 0 1-4 0 2 2 0 0 1-4 0 2 2 0 0 1-4 0Z" fill="%235b8cb5"/><path d="M12 4.5v-2M12 12.5V18a2.2 2.2 0 0 1-4.4 0" stroke="%235b8cb5" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>'>
 <style>
-  :root {
-    --bg: #f2f5fa; --surface: #ffffff; --surface-2: #f7f9fc;
-    --border: #e4e9f2; --ink: #1e293b; --ink-2: #5b6b83; --ink-3: #94a3b8;
-    --primary: #4f46e5; --primary-hover: #4338ca; --primary-soft: #eceefe;
-    --ok: #15803d; --ok-soft: #e5f6ec;
-    --warn: #b45309; --warn-soft: #fdf2e0;
-    --err: #dc2626; --err-soft: #fdecec;
-    --radius: 14px; --radius-sm: 9px;
-    --shadow: 0 1px 2px rgba(15,23,42,.05), 0 6px 20px rgba(15,23,42,.06);
-    --shadow-sm: 0 1px 2px rgba(15,23,42,.07);
-    --hero-grad: linear-gradient(135deg, #4f46e5 0%, #6d5df1 45%, #0ea5e9 100%);
+:root {
+  --bg: #f4efe3; --surface: #fdfbf3; --surface-2: #f4efe0;
+  --border: #e4dac2; --ink: #3b3324; --ink-2: #7d7059; --ink-3: #ac9f85;
+  --primary: #8a6a33; --primary-hover: #6f5426; --primary-soft: #f0e8d2;
+  --ok: #5e8a49; --ok-soft: #eaf0de;
+  --warn: #a56f2b; --warn-soft: #f6ecd6;
+  --err: #b04a38; --err-soft: #f6e3da;
+  --rain-1: #8fb3cf; --rain-2: #5b8cb5; --gold: #c99a3f;
+  --radius: 20px; --radius-sm: 10px;
+  --shadow: 0 1px 2px rgba(84,68,38,.05), 0 12px 32px rgba(84,68,38,.08);
+  --shadow-sm: 0 1px 2px rgba(84,68,38,.08);
+  --serif: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  --body-font: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  body[data-theme="ukiyo"] {
+    --bg: #171410; --surface: #221d14; --surface-2: #292318;
+    --border: #3b3221; --ink: #eae1cc; --ink-2: #ac9e81; --ink-3: #7f7258;
+    --primary: #cfa55c; --primary-hover: #e2bc78; --primary-soft: #3a301c;
+    --ok: #9cc079; --ok-soft: rgba(150,190,110,.14);
+    --warn: #d9a45c; --warn-soft: rgba(217,164,92,.13);
+    --err: #e08a76; --err-soft: rgba(224,138,118,.13);
+    --rain-1: #7ea7c4; --rain-2: #a3c2d8; --gold: #d9a94e;
+    --shadow: 0 1px 2px rgba(0,0,0,.45), 0 12px 30px rgba(0,0,0,.38);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.45);
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0c1220; --surface: #141c30; --surface-2: #1a2440;
-      --border: #263353; --ink: #e6ecf7; --ink-2: #9fb0cc; --ink-3: #6b7c9c;
-      --primary: #7c74ff; --primary-hover: #8f89ff; --primary-soft: #232a55;
-      --ok: #4ade80; --ok-soft: rgba(34,197,94,.16);
-      --warn: #fbbf24; --warn-soft: rgba(245,158,11,.15);
-      --err: #f87171; --err-soft: rgba(239,68,68,.16);
-      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
-      --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
-      --hero-grad: linear-gradient(135deg, #312e81 0%, #4338ca 50%, #0369a1 100%);
-    }
-  }
-  * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
-  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-         margin: 0 auto; max-width: 1180px; padding: 0 16px 32px;
-         color: var(--ink); background: var(--bg); line-height: 1.55; }
-  h2 { font-size: 15px; margin: 0 0 10px; }
-  .meta { color: var(--ink-2); font-size: 13px; margin: 4px 0; }
-  .warn-text { color: var(--warn); font-size: 13px; }
-  .err { color: var(--err); font-size: 13px; }
-  .ok-text { color: var(--ok); font-size: 13px; }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { font-family: var(--body-font);
+       margin: 0 auto; max-width: 1120px; padding: 0 18px 40px;
+       color: var(--ink); background: var(--bg); line-height: 1.6; }
+h2 { font-family: var(--serif); font-size: 16px; font-weight: 500; letter-spacing: 2.5px;
+     margin: 0 0 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+h2::before { content: ""; width: 20px; height: 1px; background: var(--gold); flex: none; }
+h2 button { font-size: 12px; padding: 4px 12px; }
+.meta { color: var(--ink-2); font-size: 13px; margin: 4px 0; }
+.warn-text { color: var(--warn); font-size: 12.5px; }
+.err { color: var(--err); font-size: 12.5px; }
+.ok-text { color: var(--ok); font-size: 12.5px; }
 
-  /* ---------- 顶部 Hero ---------- */
-  .hero { margin: 0 -16px 18px; padding: 28px 24px 22px;
-          background: var(--hero-grad); color: #fff; border-radius: 0 0 22px 22px; }
-  .hero h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: .5px; }
-  .hero .src-note { color: rgba(255,255,255,.78); font-size: 12.5px; margin: 0 0 12px; }
-  .status-chip { display: inline-flex; align-items: center; gap: 6px;
-                 background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28);
-                 border-radius: 999px; padding: 5px 14px; font-size: 13px; }
-  .hero .warn-text { color: #fde68a; margin: 8px 0 0; }
-  .hero .err { color: #fecaca; margin: 8px 0 0; }
+/* ---------- 顶部 ---------- */
+.hero { position: relative; margin: 22px 0 16px; padding: 30px 24px 24px; text-align: center;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 26px; box-shadow: var(--shadow); }
+.hero-date { font-size: 12px; letter-spacing: 3px; color: var(--ink-3); margin: 0 0 4px; min-height: 18px; }
+.hero-wave { display: flex; justify-content: center; margin: 4px 0 2px; }
+.hero-wave img { width: min(310px, 60vw); }
+.hero h1 { font-family: var(--serif); font-weight: 500; font-size: 32px;
+           letter-spacing: 14px; text-indent: 14px; margin: 14px 0 0; }
+.hero h1::after { content: ""; display: block; width: 52px; margin: 13px auto 0;
+                  border-bottom: 1px solid var(--gold); }
+.hero-sub { font-size: 11.5px; letter-spacing: 4.5px; text-indent: 4.5px;
+            color: var(--ink-2); margin: 11px 0 15px; }
+.src-note { color: var(--ink-3); font-size: 11.5px; margin: 0 0 14px; }
+.status-chip { display: inline-flex; align-items: center; gap: 6px;
+               background: var(--surface-2); border: 1px solid var(--border); color: var(--ink-2);
+               border-radius: 999px; padding: 6px 18px; font-size: 12.5px; }
+.hero .warn-text { margin: 10px 0 0; }
+.hero .err { margin: 10px 0 0; }
 
-  /* ---------- 按钮 / 输入 ---------- */
-  button { cursor: pointer; border: 1px solid var(--border); background: var(--surface);
-           color: var(--ink); border-radius: 999px; padding: 7px 15px; font-size: 13px;
-           font-family: inherit; box-shadow: var(--shadow-sm); transition: all .15s ease; }
-  button:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
-  button:active { transform: translateY(0); }
-  button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
-  button.primary, button.active { background: var(--primary); border-color: var(--primary); color: #fff; }
-  button.primary:hover, button.active:hover { background: var(--primary-hover);
-           border-color: var(--primary-hover); color: #fff; }
-  button:focus-visible, input:focus-visible, select:focus-visible,
-  textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-  input, select, textarea { border: 1px solid var(--border); border-radius: var(--radius-sm);
-           padding: 7px 10px; font-size: 13.5px; font-family: inherit;
-           background: var(--surface); color: var(--ink);
-           transition: border-color .15s, box-shadow .15s; }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary);
-           box-shadow: 0 0 0 3px var(--primary-soft); }
-  input[type=date] { width: 148px; }
-  input[type=number] { width: 84px; }
-  input[type=checkbox] { accent-color: var(--primary); width: 15px; height: 15px; }
-  input::placeholder { color: var(--ink-3); }
-  textarea { width: 100%; min-height: 70px; }
+/* ---------- 按钮 / 输入 ---------- */
+button { cursor: pointer; border: 1px solid var(--border); background: var(--surface);
+         color: var(--ink-2); border-radius: 999px; padding: 7px 16px; font-size: 13px;
+         font-family: inherit; box-shadow: var(--shadow-sm); transition: all .15s ease; }
+button:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
+button:active { transform: translateY(0); }
+button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+button.primary, button.active { background: var(--primary); border-color: var(--primary); color: #fbf6e9; }
+button.primary:hover, button.active:hover { background: var(--primary-hover);
+         border-color: var(--primary-hover); color: #fff; }
+button:focus-visible, input:focus-visible, select:focus-visible,
+textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+input, select, textarea { border: 1px solid var(--border); border-radius: var(--radius-sm);
+         padding: 7px 10px; font-size: 13.5px; font-family: inherit;
+         background: var(--surface); color: var(--ink);
+         transition: border-color .15s, box-shadow .15s; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary);
+         box-shadow: 0 0 0 3px var(--primary-soft); }
+input[type=date] { width: 148px; }
+input[type=number] { width: 84px; }
+input[type=checkbox] { accent-color: var(--primary); width: 15px; height: 15px; }
+input::placeholder { color: var(--ink-3); }
+textarea { width: 100%; min-height: 70px; }
 
-  /* ---------- 面板与筛选区 ---------- */
-  .panel { background: var(--surface); border: 1px solid var(--border);
-           border-radius: var(--radius); box-shadow: var(--shadow);
-           padding: 16px 18px; margin: 14px 0; animation: panel-in .25s ease; }
-  @keyframes panel-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-  #controls .row { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; margin: 10px 0; }
-  #controls label { font-size: 13px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .row-label { width: 100%; font-size: 11.5px; font-weight: 600; color: var(--ink-3);
-               letter-spacing: .6px; margin-bottom: -4px; }
+/* ---------- 面板与筛选区 ---------- */
+.panel { background: var(--surface); border: 1px solid var(--border);
+         border-radius: var(--radius); box-shadow: var(--shadow);
+         padding: 18px 20px; margin: 14px 0; animation: panel-in .25s ease; }
+@keyframes panel-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+#controls .row { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; margin: 10px 0; }
+#controls label { font-size: 13px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.row-label { width: 100%; font-size: 11px; font-weight: 600; color: var(--ink-3);
+             letter-spacing: 3px; margin-bottom: -4px; }
 
-  /* ---------- 预警徽标 ---------- */
-  .badge { display: inline-flex; align-items: center; border-radius: 999px; font-size: 12px;
-           font-weight: 600; padding: 2px 9px; margin-right: 4px; cursor: pointer; }
-  .badge.blue { background: rgba(59,130,246,.15); color: #3b82f6; }
-  .badge.yellow { background: rgba(234,179,8,.18); color: #a16207; }
-  .badge.orange { background: rgba(249,115,22,.16); color: #ea580c; }
-  .badge.red { background: rgba(239,68,68,.15); color: #dc2626; }
-  @media (prefers-color-scheme: dark) {
-    .badge.blue { color: #60a5fa; } .badge.yellow { color: #facc15; }
-    .badge.orange { color: #fb923c; } .badge.red { color: #f87171; }
-  }
+/* ---------- 预警徽标 ---------- */
+.badge { display: inline-flex; align-items: center; border-radius: 999px; font-size: 12px;
+         font-weight: 600; padding: 2px 9px; margin-right: 4px; cursor: pointer; }
+.badge.blue { background: rgba(91,140,181,.16); color: #4f7ba3; }
+.badge.yellow { background: rgba(201,154,63,.18); color: #96702c; }
+.badge.orange { background: rgba(198,110,52,.16); color: #b0632f; }
+.badge.red { background: rgba(176,74,56,.14); color: #a4432f; }
+@media (prefers-color-scheme: dark) {
+  body[data-theme="ukiyo"] .badge.blue { color: #8fb3cf; }
+  body[data-theme="ukiyo"] .badge.yellow { color: #d9b96a; }
+  body[data-theme="ukiyo"] .badge.orange { color: #e0935c; }
+  body[data-theme="ukiyo"] .badge.red { color: #e08a76; }
+}
 
-  /* ---------- 结果表格（PC） ---------- */
-  #result-meta { font-size: 13.5px; color: var(--ink-2); font-weight: 500; margin: 16px 2px 0; }
-  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius);
-                box-shadow: var(--shadow); background: var(--surface); margin-top: 10px; }
-  table { border-collapse: collapse; width: 100%; font-size: 13px; }
-  th, td { padding: 9px 12px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--border); }
-  th { background: var(--surface-2); position: sticky; top: 0; z-index: 1;
-       font-size: 12px; font-weight: 600; color: var(--ink-2); letter-spacing: .3px; }
-  tbody tr:last-child td { border-bottom: none; }
-  td.wrap, th.wrap { white-space: normal; }
-  tr.city-row { cursor: pointer; transition: background .12s; }
-  tr.city-row:hover { background: var(--primary-soft); }
-  tr.detail-row td { background: var(--surface-2); white-space: normal; font-size: 12.5px;
-                     color: var(--ink-2); line-height: 1.7; }
-  tr.missing td { background: var(--err-soft); color: var(--err); }
-  span.worse, td.worse { background: var(--err-soft); color: var(--err); border-radius: 6px; padding: 1px 5px; }
-  span.better, td.better { background: var(--ok-soft); color: var(--ok); border-radius: 6px; padding: 1px 5px; }
+/* ---------- 结果表格（PC） ---------- */
+#result-meta { font-size: 13px; color: var(--ink-2); letter-spacing: .5px; margin: 18px 4px 0; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius);
+              box-shadow: var(--shadow); background: var(--surface); margin-top: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { padding: 10px 12px; text-align: left; white-space: nowrap; border-bottom: 1px dotted var(--border); }
+th { background: var(--surface-2); position: sticky; top: 0; z-index: 1;
+     font-size: 11.5px; font-weight: 600; color: var(--ink-3); letter-spacing: 1.5px; }
+tbody tr:last-child td { border-bottom: none; }
+td.wrap, th.wrap { white-space: normal; }
+tr.city-row { cursor: pointer; transition: background .12s; }
+tr.city-row:hover { background: var(--primary-soft); }
+tr.detail-row td { background: var(--surface-2); white-space: normal; font-size: 12.5px;
+                   color: var(--ink-2); line-height: 1.7; }
+tr.missing td { background: var(--err-soft); color: var(--err); }
+span.worse, td.worse { background: var(--err-soft); color: var(--err); border-radius: 6px; padding: 1px 5px; }
+span.better, td.better { background: var(--ok-soft); color: var(--ok); border-radius: 6px; padding: 1px 5px; }
+td svg, .cc-daily svg, .cc-meta svg { vertical-align: -2.5px; margin: 0 1px; }
+.nx { font-style: normal; color: var(--err); font-size: 11px; }
 
-  /* ---------- 结果卡片（移动端） ---------- */
-  #card-list { display: none; }
-  .city-card { background: var(--surface); border: 1px solid var(--border);
-               border-radius: var(--radius); box-shadow: var(--shadow); padding: 13px 15px; }
-  .city-card .cc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .city-card .cc-name { font-weight: 700; font-size: 15px; }
-  .city-card .cc-ok { font-size: 12px; font-weight: 600; color: var(--primary);
-                      background: var(--primary-soft); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
-  .city-card .cc-daily { margin: 8px 0 6px; font-size: 13.5px; display: flex; flex-wrap: wrap; gap: 4px 10px; }
-  .city-card .cc-meta { font-size: 12.5px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
-  .city-card .cc-detail { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);
-                          font-size: 12.5px; color: var(--ink-2); line-height: 1.7; }
-  .city-card.missing { background: var(--err-soft); border-color: transparent; color: var(--err); font-size: 13px; }
+/* ---------- 逐日天气条（详情） ---------- */
+.daystrip { display: flex; margin: 12px 0 6px; overflow-x: auto;
+            border-top: 1px dotted var(--border); border-bottom: 1px dotted var(--border); }
+.daystrip .dcell { flex: 1; min-width: 68px; text-align: center;
+                   padding: 10px 6px 8px; border-right: 1px dotted var(--border); }
+.daystrip .dcell:last-child { border-right: none; }
+.dcell .dw { font-size: 11px; color: var(--ink-2); letter-spacing: 1px; }
+.dcell .dd { font-size: 10.5px; color: var(--ink-3); margin-top: 1px; }
+.dcell .di { margin: 7px 0 5px; }
+.dcell .dt { font-family: var(--serif); font-size: 16px; color: var(--ink); }
+.dcell .dt .lo { color: var(--ink-3); font-size: 12.5px; }
+.dcell .dp { font-size: 10px; color: var(--rain-2); min-height: 13px; }
 
-  /* ---------- 骨架屏 ---------- */
-  .skel { position: relative; overflow: hidden; background: var(--surface-2); border-radius: 8px; }
-  .skel::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
-                 background: linear-gradient(90deg, transparent, rgba(148,163,184,.28), transparent);
-                 animation: shimmer 1.2s infinite; }
-  @keyframes shimmer { to { transform: translateX(100%); } }
-  .skel-line { height: 16px; margin: 6px 0; }
-  .skel-line.short { width: 55%; }
-  .skel-card { padding: 16px; }
+/* ---------- 结果卡片（移动端） ---------- */
+#card-list { display: none; }
+.city-card { background: var(--surface); border: 1px solid var(--border);
+             border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; }
+.city-card .cc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.city-card .cc-name { font-family: var(--serif); font-weight: 500; font-size: 17px; letter-spacing: 1.5px; }
+.city-card .cc-ok { font-size: 12px; font-weight: 600; color: var(--primary);
+                    background: var(--primary-soft); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+.city-card .cc-daily { margin: 8px 0 6px; font-size: 13.5px; display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.city-card .cc-meta { font-size: 12.5px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
+.city-card .cc-detail { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);
+                        font-size: 12.5px; color: var(--ink-2); line-height: 1.7; }
+.city-card.missing { background: var(--err-soft); border-color: transparent; color: var(--err); font-size: 13px; }
 
-  /* ---------- Toast ---------- */
-  #toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 16px);
-           background: var(--ink); color: var(--bg); border-radius: 999px;
-           padding: 10px 20px; font-size: 13.5px; text-align: center; max-width: 88vw;
-           opacity: 0; pointer-events: none; transition: all .25s ease;
-           box-shadow: 0 8px 24px rgba(0,0,0,.25); z-index: 50; }
-  #toast.show { opacity: 1; transform: translate(-50%, 0); }
-  #toast.err { background: var(--err); color: #fff; }
+/* ---------- 骨架屏 ---------- */
+.skel { position: relative; overflow: hidden; background: var(--surface-2); border-radius: 8px; }
+.skel::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+               background: linear-gradient(90deg, transparent, rgba(172,159,133,.28), transparent);
+               animation: shimmer 1.2s infinite; }
+@keyframes shimmer { to { transform: translateX(100%); } }
+.skel-line { height: 16px; margin: 6px 0; }
+.skel-line.short { width: 55%; }
+.skel-card { padding: 16px; }
 
-  /* ---------- 变更面板 ---------- */
-  #changes ul { margin: 6px 0; padding-left: 20px; font-size: 13px; }
-  #changes li.worse { color: var(--err); }
-  #changes li.temp { color: var(--warn); }
-  #changes li.info { color: var(--ink-2); }
-  #changes li.better { color: var(--ok); }
-  #changes summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
+/* ---------- Toast ---------- */
+#toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 16px);
+         background: var(--ink); color: var(--bg); border-radius: 999px;
+         padding: 10px 20px; font-size: 13.5px; text-align: center; max-width: 88vw;
+         opacity: 0; pointer-events: none; transition: all .25s ease;
+         box-shadow: 0 8px 24px rgba(0,0,0,.25); z-index: 50; }
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+#toast.err { background: var(--err); color: #fff; }
 
-  /* ---------- 城市 / 出行面板 ---------- */
-  .prov { margin: 4px 0; }
-  .prov-head { font-weight: 600; font-size: 13px; cursor: pointer; user-select: none;
-               padding: 6px 8px; border-radius: var(--radius-sm); }
-  .prov-head:hover { background: var(--surface-2); }
-  .prov-cities { display: none; flex-wrap: wrap; gap: 6px 14px; padding: 6px 0 8px 22px; font-size: 13px; }
-  .prov.open .prov-cities { display: flex; animation: panel-in .2s ease; }
-  .prov-cities label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
-  #travel-list > div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
-                       padding: 7px 0; border-bottom: 1px dashed var(--border); font-size: 13px; }
-  #travel-list > div:last-child { border-bottom: none; }
-  #travel-list b { min-width: 64px; }
-  #travel-list label { display: flex; align-items: center; gap: 4px; color: var(--ink-2); }
+/* ---------- 变更面板 ---------- */
+#changes ul { margin: 6px 0; padding-left: 20px; font-size: 13px; }
+#changes li.worse { color: var(--err); }
+#changes li.temp { color: var(--warn); }
+#changes li.info { color: var(--ink-2); }
+#changes li.better { color: var(--ok); }
+#changes summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
 
-  /* ---------- 图表 ---------- */
-  #chart-section canvas { max-height: 400px; }
-  .chart-pick { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; margin: 8px 0; }
-  .chart-pick label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+/* ---------- 城市 / 出行面板 ---------- */
+.prov { margin: 4px 0; }
+.prov-head { font-weight: 600; font-size: 13px; cursor: pointer; user-select: none;
+             padding: 6px 8px; border-radius: var(--radius-sm); }
+.prov-head:hover { background: var(--surface-2); }
+.prov-cities { display: none; flex-wrap: wrap; gap: 6px 14px; padding: 6px 0 8px 22px; font-size: 13px; }
+.prov.open .prov-cities { display: flex; animation: panel-in .2s ease; }
+.prov-cities label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+#travel-list > div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+                     padding: 7px 0; border-bottom: 1px dashed var(--border); font-size: 13px; }
+#travel-list > div:last-child { border-bottom: none; }
+#travel-list b { min-width: 64px; }
+#travel-list label { display: flex; align-items: center; gap: 4px; color: var(--ink-2); }
 
-  .hidden { display: none !important; }
-  footer { margin: 26px 0 8px; color: var(--ink-3); font-size: 12px; text-align: center; }
+/* ---------- 图表 ---------- */
+#chart-section canvas { max-height: 400px; }
+.chart-pick { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; margin: 8px 0; }
+.chart-pick label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
 
-  /* ---------- 移动端 ---------- */
-  @media (max-width: 820px) {
-    .table-wrap { display: none; }
-    #card-list { display: grid; gap: 10px; margin-top: 10px; }
-  }
-  @media (max-width: 640px) {
-    body { padding: 0 10px 24px; }
-    .hero { margin: 0 -10px 14px; padding: 22px 16px 18px; border-radius: 0 0 18px 18px; }
-    .hero h1 { font-size: 21px; }
-    .panel { padding: 13px 14px; }
-    #controls .row { gap: 8px; }
-    input[type=date] { width: 136px; }
-    button { padding: 8px 14px; }
-    #chart-section canvas { max-height: 300px; }
-  }
+.hidden { display: none !important; }
+footer { margin: 30px 0 8px; color: var(--ink-3); font-size: 12px; text-align: center; line-height: 1.9; }
+.foot-wave { display: block; width: 110px; margin: 0 auto 10px; opacity: .2; }
+
+
+/* ---------- 日期范围滑块 ---------- */
+.range-wrap { position: relative; width: 100%; max-width: 560px; height: 58px; margin: 2px 0 0; }
+.range-wrap.disabled { opacity: .4; }
+.range-wrap.disabled input { pointer-events: none !important; }
+.range-track { position: absolute; left: 9px; right: 9px; top: 15px; height: 4px;
+               border-radius: 2px; background: var(--border); }
+.range-fill { position: absolute; top: 15px; height: 4px; border-radius: 2px;
+              background: var(--primary); left: 9px; width: 0; }
+.range-wrap input[type=range] { position: absolute; left: 0; top: 0; width: 100%; height: 34px;
+              margin: 0; padding: 0; background: transparent; border: none; box-shadow: none;
+              -webkit-appearance: none; appearance: none; pointer-events: none; }
+.range-wrap input[type=range]:focus { box-shadow: none; }
+.range-wrap input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto;
+              width: 16px; height: 16px; border-radius: 50%; background: var(--surface);
+              border: 2.5px solid var(--primary); cursor: grab; box-shadow: var(--shadow-sm); }
+.range-wrap input[type=range]::-moz-range-thumb { pointer-events: auto;
+              width: 11px; height: 11px; border-radius: 50%; background: var(--surface);
+              border: 2.5px solid var(--primary); cursor: grab; }
+.range-ticks { position: absolute; left: 0; right: 0; top: 32px; height: 24px; }
+.range-ticks .tick { position: absolute; transform: translateX(-50%); text-align: center;
+              font-size: 10px; line-height: 1.35; color: var(--ink-3); white-space: nowrap; }
+.range-ticks .tick .tw { display: block; font-size: 9px; opacity: .8; }
+.range-ticks .tick.on { color: var(--primary); font-weight: 600; }
+.range-note { width: 100%; font-size: 12px; color: var(--ink-3); letter-spacing: .5px; margin-top: 2px; }
+body[data-theme="pixel"] .range-wrap input[type=range]::-webkit-slider-thumb { border-radius: 2px; }
+body[data-theme="pixel"] .range-wrap input[type=range]::-moz-range-thumb { border-radius: 2px; }
+
+/* ---------- 移动端 ---------- */
+@media (max-width: 820px) {
+  .table-wrap { display: none; }
+  #card-list { display: grid; gap: 10px; margin-top: 10px; }
+}
+@media (max-width: 640px) {
+  body { padding: 0 12px 28px; }
+  .hero { margin: 14px 0 14px; padding: 40px 14px 18px; border-radius: 22px; }
+  .hero h1 { font-size: 25px; letter-spacing: 9px; text-indent: 9px; }
+  .hero-wave img { width: min(230px, 64vw); }
+  .panel { padding: 14px 15px; }
+  #controls .row { gap: 8px; }
+  input[type=date] { width: 136px; }
+  button { padding: 8px 14px; }
+  #chart-section canvas { max-height: 300px; }
+}
+
+/* ---------- 主题系统 ---------- */
+@font-face { font-family: "ZpixSub"; src: url("zpix-subset.woff2") format("woff2"); font-display: swap; }
+.theme-tabs { position: absolute; top: 14px; right: 16px; display: flex; gap: 3px;
+              background: var(--surface-2); border: 1px solid var(--border);
+              border-radius: 999px; padding: 3px; box-shadow: var(--shadow-sm); }
+.theme-tabs button { border: none; background: transparent; box-shadow: none;
+                     padding: 4px 12px; font-size: 12px; color: var(--ink-2); border-radius: 999px; }
+.theme-tabs button:hover { color: var(--primary); transform: none; }
+.theme-tabs button.active { background: var(--primary); color: #fbf6e9; }
+
+/* 自定义图表图例（一城一色，实心圆） */
+.chart-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: center; margin: 2px 0 8px; }
+.lg-item { display: inline-flex; align-items: center; gap: 6px; border: none; background: transparent;
+           box-shadow: none; padding: 3px 4px; font-size: 12px; color: var(--ink-2); border-radius: 6px; }
+.lg-item:hover { color: var(--primary); transform: none; }
+.lg-item.off { opacity: .35; }
+.lg-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--c); flex: none; }
+
+/* 像素风 */
+body[data-theme="pixel"] {
+  --bg: #cfe3ee; --surface: #fffdf2; --surface-2: #f3edd9;
+  --border: #23273a; --ink: #23273a; --ink-2: #4a5168; --ink-3: #8a8fa3;
+  --primary: #e0506e; --primary-hover: #c93a58; --primary-soft: #ffe3ea;
+  --ok: #2a9d5f; --ok-soft: #dcf2e5;
+  --warn: #d97b29; --warn-soft: #fdeed3;
+  --err: #d43d3d; --err-soft: #fbdede;
+  --rain-1: #6aa6d8; --rain-2: #4a90d9; --gold: #f6bd2f;
+  --radius: 4px; --radius-sm: 2px;
+  --shadow: 5px 5px 0 rgba(35,39,58,.25);
+  --shadow-sm: 3px 3px 0 rgba(35,39,58,.25);
+  --serif: "ZpixSub", "Press Start 2P", monospace;
+  --body-font: "Press Start 2P", "ZpixSub", -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 12px;
+}
+body[data-theme="pixel"] .hero h1 { letter-spacing: 8px; text-indent: 8px; font-size: 30px; }
+body[data-theme="pixel"] .hero h1::after { border-bottom: 4px solid var(--primary); width: 44px; }
+body[data-theme="pixel"] .hero-wave img { image-rendering: pixelated; }
+body[data-theme="pixel"] h2::before { width: 10px; height: 10px; background: var(--primary); }
+body[data-theme="pixel"] button, body[data-theme="pixel"] .theme-tabs { border-width: 2px; box-shadow: 3px 3px 0 var(--ink); }
+body[data-theme="pixel"] button { font-size: 12px; }
+body[data-theme="pixel"] button:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--ink); }
+body[data-theme="pixel"] button:active { transform: translate(3px, 3px); box-shadow: none; }
+body[data-theme="pixel"] .theme-tabs button { box-shadow: none; border-radius: 2px; font-family: var(--serif); }
+body[data-theme="pixel"] input, body[data-theme="pixel"] select, body[data-theme="pixel"] textarea { border-width: 2px; box-shadow: none; font-size: 12px; }
+body[data-theme="pixel"] .panel, body[data-theme="pixel"] .hero,
+body[data-theme="pixel"] .table-wrap, body[data-theme="pixel"] .city-card { border-width: 2px; }
+body[data-theme="pixel"] .status-chip { border-width: 2px; }
+body[data-theme="pixel"] #toast { border: 2px solid var(--border); border-radius: 4px; }
+body[data-theme="pixel"] .lg-item, body[data-theme="pixel"] .lg-item:hover { border: none; box-shadow: none; transform: none; }
+
+/* 中国风 */
+body[data-theme="cn"] {
+  --bg: #ece5cf; --surface: #f8f3e2; --surface-2: #efe7cd;
+  --border: #cfc19c; --ink: #2e2b25; --ink-2: #6e6450; --ink-3: #a0927a;
+  --primary: #b3452e; --primary-hover: #93331f; --primary-soft: #f2e1d0;
+  --ok: #5b6e4e; --ok-soft: #e8ecd8;
+  --warn: #a8702a; --warn-soft: #f3e8cc;
+  --err: #a63a2b; --err-soft: #f2dcd2;
+  --rain-1: #8ba3b8; --rain-2: #5e7d99; --gold: #b3452e;
+  --radius: 8px; --radius-sm: 4px;
+  --shadow: 0 1px 2px rgba(60,48,28,.06), 0 10px 28px rgba(60,48,28,.09);
+  --shadow-sm: 0 1px 2px rgba(60,48,28,.08);
+  --serif: "Ma Shan Zheng", "Noto Serif SC", "Songti SC", "STSong", serif;
+  --body-font: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+}
+body[data-theme="cn"] .hero h1 { font-size: 42px; letter-spacing: 8px; text-indent: 8px; font-weight: 400; }
+body[data-theme="cn"] h2 { font-size: 19px; }
+body[data-theme="cn"] .city-card .cc-name { font-size: 19px; }
+body[data-theme="cn"] .hero-wave img { width: min(360px, 66vw); }
+
+@media (max-width: 640px) {
+  .theme-tabs { top: 10px; right: 10px; }
+  .theme-tabs button { padding: 3px 9px; font-size: 11px; }
+  body[data-theme="cn"] .hero h1 { font-size: 32px; }
+  body[data-theme="pixel"] .hero h1 { font-size: 22px; letter-spacing: 5px; text-indent: 5px; }
+}
 </style>
 </head>
 <body>
+<script>try{const t=JSON.parse(localStorage.getItem("wq_theme"));document.body.dataset.theme={"ukiyo":1,"pixel":1,"cn":1}[t]?t:"ukiyo"}catch(e){document.body.dataset.theme="ukiyo"}</script>
 <header class="hero">
-  <h1>🌤 周末去哪 · 天气筛选</h1>
+  <div class="theme-tabs" id="theme-tabs">
+    <button type="button" data-theme="ukiyo">浮世绘</button><button type="button" data-theme="pixel">像素</button><button type="button" data-theme="cn">中国风</button>
+  </div>
+  <p class="hero-date" id="hero-date"></p>
+  <div class="hero-wave"><img src="wave.png" alt="浮世绘海浪"></div>
+  <h1>周末去哪</h1>
+  <p class="hero-sub">天气筛选 · WEEKEND WEATHER</p>
   <p class="src-note">数据来源：中国气象台 nmc.cn 未公开接口，仅供个人学习使用</p>
   <span class="status-chip" id="fetch-meta">正在加载…</span>
   <p class="warn-text" id="publish-hint"></p>
@@ -207,7 +356,7 @@
 </header>
 
 <section id="changes" class="panel hidden">
-  <h2>📋 相比上次抓取的变更 <span class="meta" id="changes-base"></span>
+  <h2>相比上次抓取的变更 <span class="meta" id="changes-base"></span>
     <button id="clear-base">清除对比基准</button></h2>
   <ul id="changes-list"></ul>
   <details id="changes-better-wrap" class="hidden">
@@ -218,16 +367,25 @@
 
 <section id="controls" class="panel">
   <div class="row">
-    <span class="row-label">📅 日期范围</span>
-    <label><input type="date" id="date-from"> ~ <input type="date" id="date-to"></label>
+    <span class="row-label">日 期 范 围</span>
+    <div class="range-wrap disabled" id="date-slider">
+      <div class="range-track"></div>
+      <div class="range-fill" id="range-fill"></div>
+      <input type="range" id="range-a" min="0" max="0" step="1" aria-label="开始日期">
+      <input type="range" id="range-b" min="0" max="0" step="1" aria-label="结束日期">
+      <div class="range-ticks" id="range-ticks"></div>
+    </div>
+    <input type="date" id="date-from" class="hidden">
+    <input type="date" id="date-to" class="hidden">
     <button id="btn-this-weekend">本周末</button>
-    <button id="btn-next-weekend">下周末</button>
+    <button id="btn-next-weekend" class="hidden">下周末</button>
     <button id="btn-next-holiday" class="hidden">下个法定节假日</button>
     <span class="warn-text hidden" id="holiday-hint"></span>
+    <span class="range-note" id="range-note">数据加载后显示可筛选的日期范围</span>
   </div>
   <div class="row">
-    <span class="row-label">🎯 筛选条件</span>
-    <label>🌧 雨天接受度
+    <span class="row-label">筛 选 条 件</span>
+    <label>雨天接受度
       <select id="max-rain">
         <option value="">不限</option>
         <option value="1">1 只接受无雨</option>
@@ -235,10 +393,10 @@
         <option value="3">3 中雨也行</option>
         <option value="4">4 不限</option>
       </select></label>
-    <label>🌡 白天 ≤ <input type="number" id="max-day" placeholder="°C"></label>
-    <label>🌡 夜间 ≥ <input type="number" id="min-night" placeholder="°C"></label>
-    <label>📆 至少 <input type="number" id="need" min="1" placeholder="全部"> 天达标</label>
-    <label>🚄 <input type="number" id="travel-hours" step="0.5" min="0" placeholder="X"> 小时圈内
+    <label>白天 ≤ <input type="number" id="max-day" placeholder="°C"></label>
+    <label>夜间 ≥ <input type="number" id="min-night" placeholder="°C"></label>
+    <label>至少 <input type="number" id="need" min="1" placeholder="全部"> 天达标</label>
+    <label><input type="number" id="travel-hours" step="0.5" min="0" placeholder="X"> 小时圈内
       <select id="travel-mode">
         <option value="any">任一方式</option>
         <option value="train">高铁</option>
@@ -247,18 +405,19 @@
       </select></label>
   </div>
   <div class="row">
-    <span class="row-label">⚙️ 操作</span>
-    <button class="primary" id="btn-refresh">🔄 重新抓取</button>
-    <button id="btn-share">🔗 复制分享链接</button>
-    <button id="btn-copy-text">📋 复制文本汇总</button>
-    <button id="btn-cities">🏙 城市管理</button>
-    <button id="btn-travel">🚄 出行数据</button>
-    <button id="btn-chart">📈 温度走势</button>
+    <span class="row-label">操 作</span>
+    <button id="btn-refresh">重新抓取</button>
+    <button id="btn-share">复制分享链接</button>
+    <button id="btn-copy-text">复制文本汇总</button>
+    <button id="btn-csv">导出 CSV</button>
+    <button id="btn-cities">城市管理</button>
+    <button id="btn-travel">出行数据</button>
+    <button id="btn-chart">温度走势</button>
   </div>
 </section>
 
 <section id="city-panel" class="panel hidden">
-  <h2>🏙 城市选择（按省分组）</h2>
+  <h2>城市选择 · 按省分组</h2>
   <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
     <input type="search" id="city-search" placeholder="搜索城市名…" style="flex:1;min-width:160px">
     <button id="city-all">全选(搜索结果)</button>
@@ -272,7 +431,7 @@
 </section>
 
 <section id="travel-panel" class="panel hidden">
-  <h2>🚄 出行时长（小时，可留空）</h2>
+  <h2>出行时长 · 小时，可留空</h2>
   <div class="row" style="display:flex;gap:8px;margin:6px 0">
     <button id="travel-export">导出 JSON</button>
     <button id="travel-import">导入 JSON</button>
@@ -297,13 +456,15 @@
 </section>
 
 <section id="chart-section" class="panel hidden">
-  <h2>📈 温度走势（今天起 7 天预报，可勾选当前筛选结果中的城市）</h2>
+  <h2>温度走势 · 今天起 7 天预报（可勾选筛选结果中的城市）</h2>
   <div class="chart-pick" id="chart-pick"></div>
+  <div class="chart-legend" id="chart-legend"></div>
   <canvas id="temp-chart"></canvas>
 </section>
 
 <div id="toast" role="status"></div>
 <footer>
+  <img class="foot-wave" src="wave.png" alt="">
   Python CLI 保留可用：python3 filter_weather.py（详见 README.md）。站点代码失效时请本地运行
   python3 nmc_weather.py refresh 后提交新 stations.json。
 </footer>
@@ -315,8 +476,109 @@ const DEFAULT_CITIES = ["上海","南京","温岭","台州","景德镇","建德"
   "湖州","杭州","南通","镇江","绍兴","桐庐","广德","富阳","安吉","滁州","扬州","宁波","宜兴","丽水","青岛","烟台"];
 const RAIN_LABELS = ["☀️ 无雨", "🌦 小雨", "🌧 中雨", "⛈ 大到暴雨"];
 const RAIN_ICONS = ["☀️", "🌦", "🌧", "⛈"];
+const RAIN_TEXT = ["无雨", "小雨", "中雨", "大到暴雨"];
+/* 线性天气图标（我的天气风格：晴=金日，雨=蓝伞，恶劣天气=金闪电） */
+function svgWrap(inner, s) { return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none">${inner}</svg>`; }
+function iconSun(s) {
+  const c = "#d2a13f";
+  const rays = [[12,2.4,12,4.6],[12,19.4,12,21.6],[2.4,12,4.6,12],[19.4,12,21.6,12],
+    [5.2,5.2,6.8,6.8],[17.2,17.2,18.8,18.8],[5.2,18.8,6.8,17.2],[17.2,6.8,18.8,5.2]]
+    .map(r => `<line x1="${r[0]}" y1="${r[1]}" x2="${r[2]}" y2="${r[3]}"/>`).join("");
+  return svgWrap(`<circle cx="12" cy="12" r="4.8" fill="${c}" stroke="none"/>` +
+    `<g stroke="${c}" stroke-width="1.6" stroke-linecap="round">${rays}</g>`, s);
+}
+function iconUmbrella(s, c) {
+  return svgWrap(`<path d="M4 12.5a8 8 0 0 1 16 0 2 2 0 0 1-4 0 2 2 0 0 1-4 0 2 2 0 0 1-4 0 2 2 0 0 1-4 0Z" fill="${c}" stroke="none"/>` +
+    `<path d="M12 4.5v-2M12 12.5V18a2.2 2.2 0 0 1-4.4 0" stroke="${c}" stroke-width="1.6" stroke-linecap="round"/>`, s);
+}
+function iconBolt(s) {
+  return svgWrap(`<path d="M13.2 2.5 5.4 13.4h5.4L9.6 21.5l8-10.9h-5.4l1-8.1Z" fill="#dfa63f" stroke="none"/>`, s);
+}
+function ukiyoIcon(t, s) {
+  s = s || 14;
+  if (t === 0) return iconSun(s);
+  if (t === 1) return iconUmbrella(s, "#8fb3cf");
+  if (t === 2) return iconUmbrella(s, "#5b8cb5");
+  if (t === 3) return iconBolt(s);
+  return "—";
+}
+/* 像素风图标：字符画网格渲染 */
+function pixelArt(rows, palette, s) {
+  let r = "";
+  rows.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      const c = palette[row[x]];
+      if (c) r += `<rect x="${x * 2}" y="${y * 2}" width="2" height="2" fill="${c}"/>`;
+    }
+  });
+  return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" shape-rendering="crispEdges">${r}</svg>`;
+}
+const PX_SUN = [
+  ".....YY.....", ".....YY.....", "..Y..YY..Y..", "...Y.YY.Y...",
+  "..YYYYYYYY..", ".YYYYYYYYYY.", ".YYYYYYYYYY.", "..YYYYYYYY..",
+  "...Y.YY.Y...", "..Y..YY..Y..", ".....YY.....", ".....YY.....",
+];
+const PX_CLOUD = [
+  "...XXXXX....", "..XXXXXXX...", ".XXXXXXXXX..",
+  "XXXXXXXXXXXX", "XXXXXXXXXXXX", ".XXXXXXXXXX.",
+];
+const PX_RAIN1 = PX_CLOUD.concat([
+  "............", "....B..B....", "....B..B....",
+  "............", ".....B..B...", ".....B..B...",
+]);
+const PX_RAIN2 = PX_CLOUD.concat([
+  "............", ".B...B...B..", ".B...B...B..",
+  "............", "..B...B...B.", "..B...B...B.",
+]);
+const PX_STORM = PX_CLOUD.concat([
+  ".....YY.....", "....YYY.....", ".....YY.....",
+  "....YY......", "...YY.......", "............",
+]);
+function pixelIcon(t, s) {
+  if (t === 0) return pixelArt(PX_SUN, { Y: "#f6bd2f" }, s);
+  if (t === 1) return pixelArt(PX_RAIN1, { X: "#9fb3c8", B: "#4a90d9" }, s);
+  if (t === 2) return pixelArt(PX_RAIN2, { X: "#9fb3c8", B: "#4a90d9" }, s);
+  if (t === 3) return pixelArt(PX_STORM, { X: "#7d8ea3", Y: "#f6bd2f" }, s);
+  return "—";
+}
+/* 中国风图标：朱砂印章 */
+function sealIcon(txt, mode, s) {
+  const ver = "#b3452e", ink = "#3a352c";
+  const color = mode === "dark" ? ink : ver;
+  const bg = mode === "full" || mode === "dark" ? color : mode === "light" ? "rgba(179,69,46,.16)" : "transparent";
+  const fg = mode === "full" || mode === "dark" ? "#f8f3e2" : color;
+  return `<svg viewBox="0 0 24 24" width="${s}" height="${s}">` +
+    `<rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="${bg}" stroke="${color}" stroke-width="1.6"/>` +
+    `<text x="12" y="16.8" text-anchor="middle" font-size="11" font-family="'Noto Serif SC','Songti SC',serif" fill="${fg}">${txt}</text></svg>`;
+}
+function cnIcon(t, s) {
+  if (t === 0) return sealIcon("晴", "outline", s);
+  if (t === 1) return sealIcon("雨", "light", s);
+  if (t === 2) return sealIcon("雨", "full", s);
+  if (t === 3) return sealIcon("雷", "dark", s);
+  return "—";
+}
+/* 主题定义与切换 */
+const THEME_DEFS = {
+  ukiyo: { img: "wave.png", icons: ukiyoIcon,
+    palette: ["#2f6f9f","#c0503a","#5e8c3f","#c99a3f","#7d5ba6","#2a8f85","#c4647f","#6e5849"] },
+  pixel: { img: "wave-pixel.png", icons: pixelIcon,
+    palette: ["#e0506e","#3a86ff","#ff9f1c","#8338ec","#06a77d","#e9c46a","#9c6644","#f72585"] },
+  cn: { img: "wave-cn.png", icons: cnIcon,
+    palette: ["#2e2b25","#b3452e","#3f6b4f","#b98a2e","#3d5a80","#7a4a56","#2f6f6f","#c2611f"] },
+};
+let THEME = "ukiyo";   // 实际值在 init() 中从 localStorage 读取（此处 lsGet 尚未定义）
+function tierIcon(t, s) { return THEME_DEFS[THEME].icons(t, s || 14); }
+function setTheme(t) {
+  if (!THEME_DEFS[t] || t === THEME) return;
+  THEME = t; lsSet(LS.theme, t);
+  document.body.dataset.theme = t;
+  document.querySelectorAll("#theme-tabs button").forEach(b => b.classList.toggle("active", b.dataset.theme === t));
+  document.querySelectorAll(".hero-wave img, .foot-wave").forEach(im => { im.src = THEME_DEFS[t].img; });
+  if (DATA) renderAll();
+}
 const WEEKDAYS = ["周日","周一","周二","周三","周四","周五","周六"];
-const LS = { cities: "wq_cities", filters: "wq_filters", travel: "wq_travel", snap: "wq_snapshots" };
+const LS = { cities: "wq_cities", filters: "wq_filters", travel: "wq_travel", snap: "wq_snapshots", theme: "wq_theme" };
 
 const $ = id => document.getElementById(id);
 const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
@@ -530,6 +792,66 @@ function weekendRange(weeksAhead) {
 }
 function setRange(r) { $("date-from").value = r.from; $("date-to").value = r.to; onFilterChange(); }
 
+/* ================= 日期范围滑块 ================= */
+let RANGE_DATES = [];
+const fmtAxisDate = d => { const [y, m, dd] = d.split("-"); return `${y}.${+m}.${+dd}`; };
+function setupRangeSlider() {
+  RANGE_DATES = [...new Set([...DATA.cities.values()].flatMap(x => x.days.map(d => d.date)))].sort();
+  const n = RANGE_DATES.length, wrap = $("date-slider"), ticks = $("range-ticks");
+  ticks.innerHTML = "";
+  wrap.classList.toggle("disabled", n < 2);
+  if (n) {
+    RANGE_DATES.forEach((d, i) => {
+      const t = document.createElement("span");
+      t.className = "tick";
+      t.style.left = `calc(9px + (100% - 18px) * ${n > 1 ? i / (n - 1) : 0})`;
+      t.innerHTML = `${d.slice(5)}<span class="tw">${WEEKDAYS[parseIso(d).getDay()]}</span>`;
+      ticks.appendChild(t);
+    });
+    $("range-note").textContent =
+      `数据覆盖 ${fmtAxisDate(RANGE_DATES[0])} ~ ${fmtAxisDate(RANGE_DATES[n - 1])} · 仅可筛选此范围内的预报`;
+  } else {
+    $("range-note").textContent = "暂无预报数据";
+  }
+  for (const id of ["range-a", "range-b"]) { $(id).min = 0; $(id).max = Math.max(n - 1, 0); }
+  syncSliderFromInputs();
+}
+function syncSliderFromInputs() {
+  const n = RANGE_DATES.length; if (!n) return;
+  const from = $("date-from").value, to = $("date-to").value;
+  let a = from ? RANGE_DATES.findIndex(d => d >= from) : 0;
+  let b = to ? RANGE_DATES.findIndex(d => d >= to) : n - 1;
+  if (a < 0) a = n - 1;
+  if (b < 0) b = from ? n - 1 : 0;
+  if (to && b < a) b = a;
+  if (!to && from) b = Math.max(b, a);
+  if (a > b) a = b;
+  $("range-a").value = a; $("range-b").value = b;
+  // 输入超出数据范围时回写为最近的有效日期，保证筛选与滑块一致
+  if (from !== RANGE_DATES[a]) $("date-from").value = RANGE_DATES[a];
+  if (to !== RANGE_DATES[b]) $("date-to").value = RANGE_DATES[b];
+  updateRangeUI();
+}
+function updateRangeUI() {
+  const n = RANGE_DATES.length; if (!n) return;
+  const a = +$("range-a").value, b = +$("range-b").value;
+  const lo = Math.min(a, b), hi = Math.max(a, b);
+  const f1 = n > 1 ? lo / (n - 1) : 0, f2 = n > 1 ? hi / (n - 1) : 0;
+  $("range-fill").style.left = `calc(9px + (100% - 18px) * ${f1})`;
+  $("range-fill").style.width = `calc((100% - 18px) * ${f2 - f1})`;
+  document.querySelectorAll("#range-ticks .tick").forEach((t, i) =>
+    t.classList.toggle("on", i >= lo && i <= hi));
+}
+function onRangePick() {
+  if (!RANGE_DATES.length) return;
+  const a = +$("range-a").value, b = +$("range-b").value;
+  const lo = Math.min(a, b), hi = Math.max(a, b);
+  $("date-from").value = RANGE_DATES[lo];
+  $("date-to").value = RANGE_DATES[hi];
+  updateRangeUI();
+  onFilterChange();
+}
+
 /* ================= 筛选与汇总（与 filter_weather.py 一致） ================= */
 function currentCriteria() {
   const f = readFilters();
@@ -574,7 +896,7 @@ function summarize() {
       ok: okDays.length, nDays: days.length,
       daily: days.map(d => {
         const dd = daymap.get(d);
-        return { date: d, icon: dd ? RAIN_ICONS[dd.tier] : "—", ok: dd ? dayOk(dd, c) : false };
+        return { date: d, icon: dd ? RAIN_ICONS[dd.tier] : "—", tier: dd ? dd.tier : -1, ok: dd ? dayOk(dd, c) : false };
       }),
       worst: Math.max(...present.map(d => d.tier)),
       dayLo: dayTemps.length ? Math.min(...dayTemps) : null,
@@ -686,11 +1008,11 @@ function renderTable(res) {
     const dailyHtml = s.daily.map(d => {
       const hl = LAST_DIFF && LAST_DIFF[`${s.name}|${d.date}`];
       const cls = hl === "worse" ? ' class="worse"' : hl === "better" ? ' class="better"' : "";
-      return `<span${cls}>${d.date.slice(8)}${d.icon}${d.ok ? "" : "✗"}</span>`;
+      return `<span${cls}>${d.date.slice(8)}${d.tier >= 0 ? tierIcon(d.tier) : "—"}${d.ok ? "" : '<em class="nx">✗</em>'}</span>`;
     }).join(" ");
     tr.innerHTML =
       `<td>${s.name}</td><td>${s.ok}/${s.nDays}</td><td>${dailyHtml}</td>` +
-      `<td>${RAIN_LABELS[s.worst]}</td>` +
+      `<td>${tierIcon(s.worst, 15)} ${RAIN_TEXT[s.worst]}</td>` +
       `<td>${fmtRange(s.dayLo, s.dayHi)}</td>` +
       `<td>${fmtRange(s.nightLo, s.nightHi)}</td>` +
       `<td>${s.totalPrecip.toFixed(1)}mm</td>` +
@@ -703,9 +1025,9 @@ function renderTable(res) {
     tb.appendChild(tr); tb.appendChild(dr);
   }
   $("result-meta").textContent =
-    `✅ 符合条件: ${res.summaries.length} / ${res.total} 个城市` +
+    `符合条件 ${res.summaries.length} / ${res.total} 个城市` +
     (res.days.length ? ` (${mmdd(res.days[0])}~${mmdd(res.days[res.days.length-1])}, 至少 ${res.need}/${res.days.length} 天达标)` : "") +
-    ` —— 点击城市行展开详情`;
+    ` · 点击城市展开详情`;
   renderCards(res);
 }
 /* 移动端城市卡片（与表格数据一致，窄屏时由 CSS 切换显示） */
@@ -723,17 +1045,17 @@ function renderCards(res) {
     const daily = s.daily.map(d => {
       const hl = LAST_DIFF && LAST_DIFF[`${s.name}|${d.date}`];
       const cls = hl === "worse" ? ' class="worse"' : hl === "better" ? ' class="better"' : "";
-      return `<span${cls}>${d.date.slice(8)}${d.icon}${d.ok ? "" : "✗"}</span>`;
+      return `<span${cls}>${d.date.slice(8)}${d.tier >= 0 ? tierIcon(d.tier) : "—"}${d.ok ? "" : '<em class="nx">✗</em>'}</span>`;
     }).join("");
     const travel = fmtTravel(s.name);
     card.innerHTML =
       `<div class="cc-head"><span class="cc-name">${s.name}</span>` +
       `<span class="cc-ok">达标 ${s.ok}/${s.nDays}</span></div>` +
       `<div class="cc-daily">${daily}</div>` +
-      `<div class="cc-meta"><span>${RAIN_LABELS[s.worst]}</span>` +
-      `<span>🌡 ${fmtRange(s.dayLo, s.dayHi)} / ${fmtRange(s.nightLo, s.nightHi)}</span>` +
-      `<span>💧 ${s.totalPrecip.toFixed(1)}mm</span>` +
-      (travel ? `<span>🚄 ${travel}</span>` : "") +
+      `<div class="cc-meta"><span>${tierIcon(s.worst, 14)} ${RAIN_TEXT[s.worst]}</span>` +
+      `<span>白天 ${fmtRange(s.dayLo, s.dayHi)} · 夜间 ${fmtRange(s.nightLo, s.nightHi)}</span>` +
+      `<span>降水 ${s.totalPrecip.toFixed(1)}mm</span>` +
+      (travel ? `<span>${travel}</span>` : "") +
       (cd.alarms.length ? `<span>${alarmBadges(cd)}</span>` : "") +
       `</div><div class="cc-detail hidden">${detailHtml(cd)}</div>`;
     card.addEventListener("click", e => {
@@ -768,11 +1090,17 @@ function detailHtml(cd) {
   if (cd.aqi != null) parts.push(`AQI ${cd.aqi} ${cd.aqiText || ""}`);
   if (cd.sunrise) parts.push(`日出 ${cd.sunrise.slice(11)} / 日落 ${cd.sunset.slice(11)}`);
   if (cd.realPublishTime) parts.push(`实况发布 ${cd.realPublishTime}`);
-  let html = `<div>🏙 ${esc(cd.province)} ${esc(cd.name)}（${esc(cd.code)}）：${parts.join(" ｜ ")}</div>`;
-  html += `<div style="margin-top:4px">逐日：` + cd.days.map(d =>
-    `${mmdd(d.date)} ${esc(d.dayInfo)}${fmtTemp(d.dayTemp)}/${esc(d.nightInfo)}${fmtTemp(d.nightTemp)} ${esc(d.dayWindD)}${esc(d.dayWindP)} 降水${d.precip}mm`).join("<br>") + `</div>`;
+  let html = `<div>${esc(cd.province)} · ${esc(cd.name)}（${esc(cd.code)}）｜ ${parts.join(" ｜ ")}</div>`;
+  html += `<div class="daystrip">` + cd.days.map(d => {
+    const tip = `${mmdd(d.date)} ${esc(d.dayInfo)}${fmtTemp(d.dayTemp)}/${esc(d.nightInfo)}${fmtTemp(d.nightTemp)} ${esc(d.dayWindD)}${esc(d.dayWindP)} 降水${d.precip}mm`;
+    return `<div class="dcell" title="${tip}">` +
+      `<div class="dw">${wday(d.date)}</div><div class="dd">${mmdd(d.date)}</div>` +
+      `<div class="di">${tierIcon(d.tier, 20)}</div>` +
+      `<div class="dt">${d.dayTemp !== null ? d.dayTemp.toFixed(0) + "°" : "—"} <span class="lo">${d.nightTemp !== null ? d.nightTemp.toFixed(0) + "°" : "—"}</span></div>` +
+      `<div class="dp">${d.precip > 0 ? d.precip.toFixed(1) + "mm" : ""}</div></div>`;
+  }).join("") + `</div>`;
   if (cd.alarms.length) {
-    html += `<div style="margin-top:4px">⚠️ 预警：` + cd.alarms.map(a =>
+    html += `<div style="margin-top:4px">预警：` + cd.alarms.map(a =>
       `<div>· <span class="badge ${a.level}">${LEVEL_LABEL[a.level]}</span> ` +
       `<a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.title)}</a> ${esc(a.issuetime)}</div>`).join("") + `</div>`;
   }
@@ -788,7 +1116,7 @@ function renderPublishHint() {
     .filter(c => c.publishTime && (max - new Date(c.publishTime.replace(" ", "T")).getTime()) >= 6 * 3600e3)
     .map(c => `${c.name}(${c.publishTime})`);
   $("publish-hint").textContent = lagged.length
-    ? `⚠️ 以下城市发报时间明显滞后，可能未更新到最新批次：${lagged.join("、")}` : "";
+    ? `以下城市发报时间明显滞后，可能未更新到最新批次：${lagged.join("、")}` : "";
 }
 
 /* ================= 文本汇总复制（阶段四，与 CLI 同格式） ================= */
@@ -814,6 +1142,40 @@ async function copyText(t) {
     ta.value = t; document.body.appendChild(ta); ta.select();
     const ok = document.execCommand("copy"); ta.remove(); return ok;
   }
+}
+
+/* ================= 导出 CSV（当前筛选城市 × 筛选日期） ================= */
+function exportCSV() {
+  const res = LAST_RESULT;
+  if (!res || !res.summaries.length) { toast("当前无符合筛选的城市，无法导出", true); return; }
+  const q = s => { s = String(s ?? ""); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const fetched = DATA.fetchedAt instanceof Date ? DATA.fetchedAt : new Date(DATA.fetchedAt);
+  const fmtDT = d => `${iso(d)} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  const srcLabel = DATA.source === "live" ? "实时直连 nmc.cn" : "data.json 快照";
+  const c = currentCriteria();
+  const lines = [];
+  lines.push(["数据获取时间", `${fmtDT(fetched)}（${srcLabel}）`].map(q).join(","));
+  lines.push(["筛选日期范围", res.days.length ? `${res.days[0]} ~ ${res.days[res.days.length - 1]}` : "（无）"].map(q).join(","));
+  lines.push(["符合条件", `${res.summaries.length} / ${res.total} 个城市`].map(q).join(","));
+  lines.push("");
+  lines.push(["城市", "省份", "日期", "星期", "白天天气", "白天温度(°C)", "夜间天气", "夜间温度(°C)",
+    "白天风向", "白天风力", "夜间风向", "夜间风力", "降水量(mm)", "是否达标"].map(q).join(","));
+  for (const s of res.summaries) {
+    const daymap = new Map(s.cd.days.map(d => [d.date, d]));
+    for (const dstr of res.days) {
+      const d = daymap.get(dstr); if (!d) continue;
+      lines.push([s.name, s.province, d.date, wday(d.date), d.dayInfo, d.dayTemp ?? "", d.nightInfo,
+        d.nightTemp ?? "", d.dayWindD, d.dayWindP, d.nightWindD, d.nightWindP, d.precip,
+        dayOk(d, c) ? "是" : "否"].map(q).join(","));
+    }
+  }
+  const blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `周末去哪_天气筛选_${iso(fetched)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast(`已导出 CSV：${res.summaries.length} 城 × ${res.days.length} 天`);
 }
 
 /* ================= 城市管理面板（阶段二） ================= */
@@ -873,31 +1235,55 @@ function renderTravelPanel() {
 }
 
 /* ================= 温度走势图（阶段八） ================= */
-const PALETTE = ["#2563eb","#dc2626","#16a34a","#9333ea","#ea580c","#0891b2","#be185d","#65a30d"];
+let CHART_TOUCHED = false;   // 用户手动改过勾选后，尊重其选择
 function renderChartPicker() {
-  // 可勾选城市 = 当前筛选结果中的城市, 重绘时保留仍存在的勾选项
+  // 可勾选城市 = 当前筛选结果中的城市；已有筛选结果且用户未手动勾选过时默认全选
   const box = $("chart-pick");
   const prevChecked = new Set([...box.querySelectorAll("input:checked")].map(x => x.value));
+  const checkAll = !CHART_TOUCHED && prevChecked.size === 0;
   box.innerHTML = "";
   const names = (LAST_RESULT ? LAST_RESULT.summaries : []).map(s => s.name);
   for (const name of names) {
     const lab = document.createElement("label");
-    lab.innerHTML = `<input type="checkbox" value="${name}" ${prevChecked.has(name) ? "checked" : ""}>${name}`;
-    lab.querySelector("input").addEventListener("change", drawChart);
+    lab.innerHTML = `<input type="checkbox" value="${name}" ${(checkAll || prevChecked.has(name)) ? "checked" : ""}>${name}`;
+    lab.querySelector("input").addEventListener("change", () => { CHART_TOUCHED = true; drawChart(); });
     box.appendChild(lab);
   }
   if (!names.length) box.textContent = "（当前筛选无符合城市）";
 }
+/* 自定义图例：一个城市一项（实心圆），点击显隐该城市的高/低温两条线 */
+function renderChartLegend() {
+  const box = $("chart-legend"); if (!box || !chart) return;
+  box.innerHTML = "";
+  const groups = new Map();   // 城市 -> { color, idxs: [dataset 下标] }
+  chart.data.datasets.forEach((ds, i) => {
+    if (!groups.has(ds.city)) groups.set(ds.city, { color: ds.borderColor, idxs: [] });
+    groups.get(ds.city).idxs.push(i);
+  });
+  for (const [city, g] of groups) {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "lg-item" + (g.idxs.every(i => chart.getDatasetMeta(i).hidden) ? " off" : "");
+    item.innerHTML = `<span class="lg-dot" style="--c:${g.color}"></span>${city}`;
+    item.addEventListener("click", () => {
+      const hide = !g.idxs.every(i => chart.getDatasetMeta(i).hidden);
+      g.idxs.forEach(i => { chart.getDatasetMeta(i).hidden = hide; });
+      item.classList.toggle("off", hide);
+      chart.update();
+    });
+    box.appendChild(item);
+  }
+}
 function drawChart() {
   const picked = [...$("chart-pick").querySelectorAll("input:checked")].map(x => x.value);
-  // 深色模式下调整图表文字/网格颜色
-  if (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) {
-    Chart.defaults.color = "#9fb0cc";
-    Chart.defaults.borderColor = "rgba(148,163,184,.18)";
-  } else {
-    Chart.defaults.color = "#666";
-    Chart.defaults.borderColor = "rgba(0,0,0,.1)";
-  }
+  // 按主题调整图表文字/网格/字体
+  const pal = THEME_DEFS[THEME].palette;
+  const darkUI = THEME === "ukiyo" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
+  Chart.defaults.color = darkUI ? "#ac9e81" : THEME === "pixel" ? "#4a5168" : THEME === "cn" ? "#6e6450" : "#7d7059";
+  Chart.defaults.borderColor = darkUI ? "rgba(172,159,133,.22)" : THEME === "pixel" ? "rgba(35,39,58,.16)" : "rgba(110,100,80,.18)";
+  Chart.defaults.font.family = THEME === "pixel" ? '"Press Start 2P", monospace'
+    : THEME === "cn" ? '"Noto Serif SC", "Songti SC", serif'
+    : '-apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
   const datasets = [];
   let labels = [];
   const todayStr = iso(new Date()).replace(/-/g, "/");
@@ -906,23 +1292,39 @@ function drawChart() {
     // 只画今天起的 7 天预报 (tempchart 前 7 条为历史实况, 剔除)
     const tc = cd.tempchart.filter(x => x.time >= todayStr);
     labels = tc.map(x => x.time.slice(5).replace("/", "-"));
-    const color = PALETTE[i % PALETTE.length];
-    datasets.push({ label: `${name} 高温`, data: tc.map(x => x.max_temp), borderColor: color, backgroundColor: color, tension: 0.3 });
-    datasets.push({ label: `${name} 低温`, data: tc.map(x => x.min_temp), borderColor: color, backgroundColor: color, borderDash: [6, 4], tension: 0.3 });
+    const color = pal[i % pal.length];
+    datasets.push({ city: name, label: `${name} 高温`, data: tc.map(x => x.max_temp), borderColor: color, backgroundColor: color,
+      tension: 0.3, pointRadius: 4, pointHoverRadius: 7, pointBorderWidth: 1 });
+    datasets.push({ city: name, label: `${name} 低温`, data: tc.map(x => x.min_temp), borderColor: color, backgroundColor: color,
+      borderDash: [6, 4], tension: 0.3, pointRadius: 4, pointHoverRadius: 7, pointBorderWidth: 1 });
   });
   if (chart) chart.destroy();
+  const tipBg = darkUI ? "#2c2820" : THEME === "pixel" ? "#23273a" : THEME === "cn" ? "#3a342a" : "#33302a";
   chart = new Chart($("temp-chart"), {
     type: "line",
     data: { labels, datasets },
-    options: { responsive: true, interaction: { mode: "index", intersect: false },
+    options: { responsive: true, interaction: { mode: "nearest", intersect: true },
+      plugins: {
+        legend: { display: false },
+        tooltip: {   // 悬停/点按节点：显示该节点的城市、日期、高温/低温与温度
+          backgroundColor: tipBg, titleColor: "#f5efdf", bodyColor: "#f5efdf",
+          padding: 10, cornerRadius: THEME === "pixel" ? 0 : 8, displayColors: false,
+          filter: (item, idx) => idx === 0,   // 节点重叠时也只显示对应那一个节点
+          callbacks: {
+            title: items => items.length ? `日期 ${items[0].label}` : "",
+            label: item => `${item.dataset.label}：${item.parsed.y}°C`,
+          },
+        },
+      },
       scales: { y: { title: { display: true, text: "°C" } } } },
   });
+  renderChartLegend();
 }
 
 /* ================= 主流程 ================= */
 async function refresh() {
   $("global-err").textContent = "";
-  $("fetch-meta").textContent = "🔄 正在并发抓取各城市预报…";
+  $("fetch-meta").textContent = "正在并发抓取各城市预报…";
   $("btn-refresh").disabled = true;
   showSkeleton();
   try {
@@ -938,7 +1340,7 @@ async function refresh() {
         fetchedAt = result.fetchedAt ? new Date(result.fetchedAt.replace(" ", "T")) : fetchedAt;
       } catch (e2) {
         $("fetch-meta").textContent = "";
-        $("global-err").textContent = `❌ NMC 接口请求失败（${e.message}），且无可用的 data.json 快照（${e2.message}）。接口可能已变更或网络异常。`;
+        $("global-err").textContent = `NMC 接口请求失败（${e.message}），且无可用的 data.json 快照（${e2.message}）。接口可能已变更或网络异常。`;
         $("summary-body").innerHTML = "";
         $("card-list").innerHTML = "";
         return;
@@ -961,14 +1363,15 @@ async function refresh() {
 
     const now = new Date();
     $("fetch-meta").textContent = source === "live"
-      ? `✅ 本次抓取时刻：${iso(now)} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")} ｜ 成功 ${DATA.cities.size} 城` +
+      ? `本次抓取时刻 ${iso(now)} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")} ｜ 成功 ${DATA.cities.size} 城` +
         (DATA.missingCities.length ? ` ｜ 未收录 ${DATA.missingCities.length} 城` : "") +
         (result.errors.length ? ` ｜ 失败 ${result.errors.length} 城` : "")
-      : `⚠️ 直连 NMC 失败，显示数据快照（更新于 ${result.fetchedAt || "未知"}）`;
+      : `直连 NMC 失败 · 显示数据快照（更新于 ${result.fetchedAt || "未知"}）`;
     if (result.errors.length)
       $("global-err").textContent = `部分城市抓取失败：${result.errors.slice(0, 3).join("；")}`;
 
     renderPublishHint();
+    setupRangeSlider();
     renderAll();
   } finally {
     $("btn-refresh").disabled = false;
@@ -982,13 +1385,15 @@ function renderAll() {
 }
 function onFilterChange() {
   lsSet(LS.filters, readFilters());
-  if (DATA) renderAll();
+  if (DATA) { if (RANGE_DATES.length) syncSliderFromInputs(); renderAll(); }
 }
 
 /* ================= 事件绑定与初始化 ================= */
 function bindEvents() {
   for (const id of ["date-from","date-to","max-rain","max-day","min-night","need","travel-hours","travel-mode"])
     $(id).addEventListener("change", onFilterChange);
+  for (const id of ["range-a","range-b"]) $(id).addEventListener("input", onRangePick);
+  $("btn-csv").addEventListener("click", exportCSV);
   $("btn-refresh").addEventListener("click", refresh);
   $("btn-this-weekend").addEventListener("click", () => setRange(weekendRange(0)));
   $("btn-next-weekend").addEventListener("click", () => setRange(weekendRange(1)));
@@ -999,10 +1404,10 @@ function bindEvents() {
   $("btn-share").addEventListener("click", async () => {
     const url = location.origin + location.pathname + encodeHash();
     history.replaceState(null, "", encodeHash());
-    toast(await copyText(url) ? "✅ 分享链接已复制" : "复制失败", false);
+    toast(await copyText(url) ? "分享链接已复制" : "复制失败", false);
   });
   $("btn-copy-text").addEventListener("click", async () => {
-    toast(await copyText(buildTextSummary()) ? "✅ 文本汇总已复制" : "复制失败", false);
+    toast(await copyText(buildTextSummary()) ? "文本汇总已复制" : "复制失败", false);
   });
   $("clear-base").addEventListener("click", () => {
     lsSet(LS.snap, { prev: null, curr: null });
@@ -1028,7 +1433,7 @@ function bindEvents() {
   $("city-export").addEventListener("click", async () => {
     const ta = $("city-text"); ta.classList.remove("hidden");
     ta.value = CITIES.join("\n");
-    toast(await copyText(ta.value) ? "✅ 城市列表已复制（与 cities.txt 格式互通）" : "已展开文本，请手动复制");
+    toast(await copyText(ta.value) ? "城市列表已复制（与 cities.txt 格式互通）" : "已展开文本，请手动复制");
   });
   $("city-import").addEventListener("click", () => {
     const ta = $("city-text");
@@ -1048,7 +1453,7 @@ function bindEvents() {
   $("travel-export").addEventListener("click", async () => {
     const ta = $("travel-text"); ta.classList.remove("hidden");
     ta.value = JSON.stringify(TRAVEL, null, 1);
-    toast(await copyText(ta.value) ? "✅ 出行数据 JSON 已复制" : "已展开文本，请手动复制");
+    toast(await copyText(ta.value) ? "出行数据 JSON 已复制" : "已展开文本，请手动复制");
   });
   $("travel-import").addEventListener("click", () => {
     const ta = $("travel-text");
@@ -1071,6 +1476,15 @@ function bindEvents() {
 }
 async function init() {
   bindEvents();
+  THEME = lsGet(LS.theme, "ukiyo");
+  if (!THEME_DEFS[THEME]) THEME = "ukiyo";
+  document.body.dataset.theme = THEME;
+  document.querySelectorAll("#theme-tabs button").forEach(b => {
+    b.classList.toggle("active", b.dataset.theme === THEME);
+    b.addEventListener("click", () => setTheme(b.dataset.theme));
+  });
+  document.querySelectorAll(".hero-wave img, .foot-wave").forEach(im => { im.src = THEME_DEFS[THEME].img; });
+  { const n = new Date(); $("hero-date").textContent = `${n.getMonth() + 1} 月 ${n.getDate()} 日 · ${WEEKDAYS[n.getDay()]}`; }
   const hasHash = decodeHash();
   if (!hasHash) {
     applyFilters(lsGet(LS.filters, {}));
@@ -1086,17 +1500,17 @@ async function init() {
     HOLIDAYS = await (await fetch("holidays.json", { cache: "no-store" })).json();
     if (!nextHoliday()) {
       $("btn-next-holiday").disabled = true;
-      $("holiday-hint").textContent = "⚠️ 假期数据待更新（holidays.json 未覆盖当前日期）";
+      $("holiday-hint").textContent = "假期数据待更新（holidays.json 未覆盖当前日期）";
     }
   } catch {
     $("btn-next-holiday").disabled = true;
-    $("holiday-hint").textContent = "⚠️ holidays.json 加载失败，假期快捷按钮不可用";
+    $("holiday-hint").textContent = "holidays.json 加载失败，假期快捷按钮不可用";
   }
   try {
     STATIONS = await (await fetch("stations.json")).json();
   } catch (e) {
     $("fetch-meta").textContent = "";
-    $("global-err").textContent = `❌ stations.json 加载失败：${e.message}。请确认站点缓存已随页面一起部署。`;
+    $("global-err").textContent = `stations.json 加载失败：${e.message}。请确认站点缓存已随页面一起部署。`;
     return;
   }
   await refresh();
