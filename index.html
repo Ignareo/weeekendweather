@@ -7,7 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;500;600&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;500;600&family=Press+Start+2P&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
 <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 12.5a8 8 0 0 1 16 0 2 2 0 0 1-4 0 2 2 0 0 1-4 0 2 2 0 0 1-4 0 2 2 0 0 1-4 0Z" fill="%235b8cb5"/><path d="M12 4.5v-2M12 12.5V18a2.2 2.2 0 0 1-4.4 0" stroke="%235b8cb5" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>'>
 <style>
 :root {
@@ -331,19 +331,95 @@ body[data-theme="cn"] h2 { font-size: 19px; }
 body[data-theme="cn"] .city-card .cc-name { font-size: 19px; }
 body[data-theme="cn"] .hero-wave img { width: min(360px, 66vw); }
 
+/* 多巴胺（starface.world 风：黑色画布 + 高饱和圆角卡片 + 胖圆字） */
+body[data-theme="dopa"] {
+  --bg: #111111; --surface: #ffffff; --surface-2: #dcf8ff;
+  --border: #000000; --ink: #111111; --ink-2: #4d4d4d; --ink-3: #8a8a8a;
+  --primary: #fdff00; --primary-hover: #ff9cee; --primary-soft: #f5f8c2;
+  --ok: #26ba28; --ok-soft: #d9f6da;
+  --warn: #ff6b35; --warn-soft: #ffe4d2;
+  --err: #ff07da; --err-soft: #ffd6f5;
+  --rain-1: #00cced; --rain-2: #00adef; --gold: #fdff00;
+  --radius: 22px; --radius-sm: 999px;
+  --shadow: none; --shadow-sm: none;
+  --serif: "ZCOOL KuaiLe", "Fredoka", -apple-system, "PingFang SC", sans-serif;
+  --body-font: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+/* 顶部黄色大卡 */
+body[data-theme="dopa"] .hero { background: #fdff00; border: none; }
+body[data-theme="dopa"] .hero h1 { font-size: 46px; letter-spacing: 5px; text-indent: 5px;
+  color: #111; transform: rotate(-1.5deg); }
+body[data-theme="dopa"] .hero h1::after { border-bottom: 4px solid #111; width: 62px; }
+body[data-theme="dopa"] .hero-sub { font-family: "Fredoka", sans-serif; font-weight: 600;
+  text-transform: lowercase; letter-spacing: 2px; color: rgba(0,0,0,.72); }
+body[data-theme="dopa"] .hero-date { font-family: "Fredoka", sans-serif; font-weight: 500; color: rgba(0,0,0,.62); }
+body[data-theme="dopa"] .src-note { color: rgba(0,0,0,.55); }
+body[data-theme="dopa"] .status-chip { background: #111; border: none; color: #fdff00; font-weight: 600; }
+/* 面板与卡片：白卡黑缝，去掉描边阴影 */
+body[data-theme="dopa"] .panel, body[data-theme="dopa"] .table-wrap,
+body[data-theme="dopa"] .city-card { border: none; }
+/* 标题 */
+body[data-theme="dopa"] h2 { font-size: 20px; letter-spacing: 1px; }
+body[data-theme="dopa"] h2::before { content: "✦"; width: auto; height: auto; background: none;
+  color: #ff07da; font-size: 17px; }
+/* 按钮：白底黑边胶囊，hover 泡泡粉，选中电光黄 */
+body[data-theme="dopa"] button { border: 2px solid #111; background: #fff; color: #111; font-weight: 600; }
+body[data-theme="dopa"] button:hover { background: #ff9cee; border-color: #111; color: #111; }
+body[data-theme="dopa"] button.primary, body[data-theme="dopa"] button.active { background: #fdff00;
+  border-color: #111; color: #111; }
+body[data-theme="dopa"] button.primary:hover, body[data-theme="dopa"] button.active:hover {
+  background: #ff9cee; border-color: #111; color: #111; }
+body[data-theme="dopa"] button:focus-visible { outline-color: #ff07da; }
+/* 输入控件：胶囊形黑边 */
+body[data-theme="dopa"] input, body[data-theme="dopa"] select, body[data-theme="dopa"] textarea {
+  border: 2px solid #111; border-radius: 999px; }
+body[data-theme="dopa"] textarea { border-radius: 18px; }
+body[data-theme="dopa"] input:focus, body[data-theme="dopa"] select:focus,
+body[data-theme="dopa"] textarea:focus { border-color: #ff07da; box-shadow: 0 0 0 3px #ffd6f5; }
+body[data-theme="dopa"] input[type=checkbox] { accent-color: #111; }
+/* 主题切换：黑色胶囊槽 + 黄色激活 */
+body[data-theme="dopa"] .theme-tabs { background: #111; border: none; }
+body[data-theme="dopa"] .theme-tabs button { background: transparent; color: rgba(255,255,255,.78);
+  border: none; font-weight: 500; }
+body[data-theme="dopa"] .theme-tabs button:hover { background: transparent; color: #fdff00; }
+body[data-theme="dopa"] .theme-tabs button.active { background: #fdff00; color: #111; }
+/* 表格：黑色表头 + 黄字 */
+body[data-theme="dopa"] th { background: #111; color: #fdff00; font-family: "Fredoka", "ZCOOL KuaiLe",
+  -apple-system, "PingFang SC", sans-serif; letter-spacing: 1px; }
+body[data-theme="dopa"] .city-card .cc-ok { background: #111; color: #fdff00; }
+/* 图表卡：纯黑底 + 霓虹线 */
+body[data-theme="dopa"] #chart-section { background: #000; color: rgba(255,255,255,.88); }
+body[data-theme="dopa"] #chart-section h2 { color: #fff; }
+body[data-theme="dopa"] #chart-section .chart-pick { color: rgba(255,255,255,.88); }
+body[data-theme="dopa"] #chart-section input[type=checkbox] { accent-color: #fdff00; }
+body[data-theme="dopa"] #chart-section .lg-item { background: transparent; border: none;
+  color: rgba(255,255,255,.88); font-weight: 500; }
+body[data-theme="dopa"] #chart-section .lg-item:hover { background: transparent; color: #fdff00; }
+/* 日期滑块 */
+body[data-theme="dopa"] .range-fill { box-shadow: 0 0 0 1px #111; }
+body[data-theme="dopa"] .range-wrap input[type=range]::-webkit-slider-thumb { background: #fdff00;
+  border: 2.5px solid #111; }
+body[data-theme="dopa"] .range-wrap input[type=range]::-moz-range-thumb { background: #fdff00;
+  border: 2.5px solid #111; }
+body[data-theme="dopa"] .range-ticks .tick.on { color: #111; }
+/* Toast */
+body[data-theme="dopa"] #toast { background: #fdff00; color: #111; border: 2px solid #111; box-shadow: none; }
+body[data-theme="dopa"] #toast.err { background: #ff07da; color: #fff; border-color: #111; }
+
 @media (max-width: 640px) {
   .theme-tabs { top: 10px; right: 10px; }
   .theme-tabs button { padding: 3px 9px; font-size: 11px; }
   body[data-theme="cn"] .hero h1 { font-size: 32px; }
   body[data-theme="pixel"] .hero h1 { font-size: 22px; letter-spacing: 5px; text-indent: 5px; }
+  body[data-theme="dopa"] .hero h1 { font-size: 34px; letter-spacing: 3px; text-indent: 3px; }
 }
 </style>
 </head>
 <body>
-<script>try{const t=JSON.parse(localStorage.getItem("wq_theme"));document.body.dataset.theme={"ukiyo":1,"pixel":1,"cn":1}[t]?t:"ukiyo"}catch(e){document.body.dataset.theme="ukiyo"}</script>
+<script>try{const t=JSON.parse(localStorage.getItem("wq_theme"));document.body.dataset.theme={"ukiyo":1,"pixel":1,"cn":1,"dopa":1}[t]?t:"ukiyo"}catch(e){document.body.dataset.theme="ukiyo"}</script>
 <header class="hero">
   <div class="theme-tabs" id="theme-tabs">
-    <button type="button" data-theme="ukiyo">浮世绘</button><button type="button" data-theme="pixel">像素</button><button type="button" data-theme="cn">中国风</button>
+    <button type="button" data-theme="ukiyo">浮世绘</button><button type="button" data-theme="pixel">像素</button><button type="button" data-theme="cn">中国风</button><button type="button" data-theme="dopa">多巴胺</button>
   </div>
   <p class="hero-date" id="hero-date"></p>
   <div class="hero-wave"><img src="wave.png" alt="浮世绘海浪"></div>
@@ -558,6 +634,37 @@ function cnIcon(t, s) {
   if (t === 3) return sealIcon("雷", "dark", s);
   return "—";
 }
+/* 多巴胺图标：粗黑描边贴纸 + 笑脸（starface 风） */
+function dopaFace(cx, cy, gap) {
+  return `<circle cx="${cx - gap}" cy="${cy}" r=".85" fill="#111"/><circle cx="${cx + gap}" cy="${cy}" r=".85" fill="#111"/>` +
+    `<path d="M${cx - 1.9} ${cy + 2.1}q1.9 1.7 3.8 0" stroke="#111" stroke-width="1.3" fill="none" stroke-linecap="round"/>`;
+}
+function dopaSun(s) {
+  const rays = [[12,1.6,12,4],[12,20,12,22.4],[1.6,12,4,12],[20,12,22.4,12],
+    [4.6,4.6,6.3,6.3],[17.7,17.7,19.4,19.4],[4.6,19.4,6.3,17.7],[17.7,6.3,19.4,4.6]]
+    .map(r => `<line x1="${r[0]}" y1="${r[1]}" x2="${r[2]}" y2="${r[3]}"/>`).join("");
+  return svgWrap(`<g stroke="#111" stroke-width="2.1" stroke-linecap="round">${rays}</g>` +
+    `<circle cx="12" cy="12" r="6.1" fill="#fdff00" stroke="#111" stroke-width="1.8"/>` +
+    dopaFace(12, 10.9, 2.2), s);
+}
+const DOPA_CLOUD = "M6.8 15.5a3.5 3.5 0 0 1-.7-6.9 4.7 4.7 0 0 1 9.2-1.4 3.8 3.8 0 0 1 2.9 8.3Z";
+function dopaRain(s, drops) {
+  const cols = ["#fdff00", "#ff07da", "#00cced"];
+  const dd = drops.map((x, i) =>
+    `<line x1="${x}" y1="17.6" x2="${x - .8}" y2="20.4" stroke="${cols[i % 3]}" stroke-width="2.2" stroke-linecap="round"/>`).join("");
+  return svgWrap(`<path d="${DOPA_CLOUD}" fill="#dcf8ff" stroke="#111" stroke-width="1.8" stroke-linejoin="round"/>` +
+    dopaFace(12, 10.2, 2.1) + dd, s);
+}
+function dopaBolt(s) {
+  return svgWrap(`<path d="M13.2 2.5 5.4 13.4h5.4L9.6 21.5l8-10.9h-5.4l1-8.1Z" fill="#fdff00" stroke="#111" stroke-width="1.7" stroke-linejoin="round"/>`, s);
+}
+function dopaIcon(t, s) {
+  if (t === 0) return dopaSun(s);
+  if (t === 1) return dopaRain(s, [9.5, 14.5]);
+  if (t === 2) return dopaRain(s, [8, 12, 16]);
+  if (t === 3) return dopaBolt(s);
+  return "—";
+}
 /* 主题定义与切换 */
 const THEME_DEFS = {
   ukiyo: { img: "wave.png", icons: ukiyoIcon,
@@ -566,6 +673,8 @@ const THEME_DEFS = {
     palette: ["#e0506e","#3a86ff","#ff9f1c","#8338ec","#06a77d","#e9c46a","#9c6644","#f72585"] },
   cn: { img: "wave-cn.png", icons: cnIcon,
     palette: ["#2e2b25","#b3452e","#3f6b4f","#b98a2e","#3d5a80","#7a4a56","#2f6f6f","#c2611f"] },
+  dopa: { img: "wave-dopa.png", icons: dopaIcon,
+    palette: ["#fdff00","#ff07da","#00cced","#26ba28","#8d3eff","#ff9cee","#ff6b35","#5cddf7"] },
 };
 let THEME = "ukiyo";   // 实际值在 init() 中从 localStorage 读取（此处 lsGet 尚未定义）
 function tierIcon(t, s) { return THEME_DEFS[THEME].icons(t, s || 14); }
@@ -1279,9 +1388,12 @@ function drawChart() {
   // 按主题调整图表文字/网格/字体
   const pal = THEME_DEFS[THEME].palette;
   const darkUI = THEME === "ukiyo" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
-  Chart.defaults.color = darkUI ? "#ac9e81" : THEME === "pixel" ? "#4a5168" : THEME === "cn" ? "#6e6450" : "#7d7059";
-  Chart.defaults.borderColor = darkUI ? "rgba(172,159,133,.22)" : THEME === "pixel" ? "rgba(35,39,58,.16)" : "rgba(110,100,80,.18)";
+  Chart.defaults.color = darkUI ? "#ac9e81" : THEME === "dopa" ? "rgba(255,255,255,.85)"
+    : THEME === "pixel" ? "#4a5168" : THEME === "cn" ? "#6e6450" : "#7d7059";
+  Chart.defaults.borderColor = darkUI ? "rgba(172,159,133,.22)" : THEME === "dopa" ? "rgba(255,255,255,.16)"
+    : THEME === "pixel" ? "rgba(35,39,58,.16)" : "rgba(110,100,80,.18)";
   Chart.defaults.font.family = THEME === "pixel" ? '"Press Start 2P", monospace'
+    : THEME === "dopa" ? '"Fredoka", -apple-system, "PingFang SC", sans-serif'
     : THEME === "cn" ? '"Noto Serif SC", "Songti SC", serif'
     : '-apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
   const datasets = [];
@@ -1299,7 +1411,8 @@ function drawChart() {
       borderDash: [6, 4], tension: 0.3, pointRadius: 4, pointHoverRadius: 7, pointBorderWidth: 1 });
   });
   if (chart) chart.destroy();
-  const tipBg = darkUI ? "#2c2820" : THEME === "pixel" ? "#23273a" : THEME === "cn" ? "#3a342a" : "#33302a";
+  const tipBg = darkUI ? "#2c2820" : THEME === "dopa" ? "#fdff00" : THEME === "pixel" ? "#23273a" : THEME === "cn" ? "#3a342a" : "#33302a";
+  const tipFg = THEME === "dopa" ? "#111111" : "#f5efdf";
   chart = new Chart($("temp-chart"), {
     type: "line",
     data: { labels, datasets },
@@ -1307,8 +1420,8 @@ function drawChart() {
       plugins: {
         legend: { display: false },
         tooltip: {   // 悬停/点按节点：显示该节点的城市、日期、高温/低温与温度
-          backgroundColor: tipBg, titleColor: "#f5efdf", bodyColor: "#f5efdf",
-          padding: 10, cornerRadius: THEME === "pixel" ? 0 : 8, displayColors: false,
+          backgroundColor: tipBg, titleColor: tipFg, bodyColor: tipFg,
+          padding: 10, cornerRadius: THEME === "pixel" ? 0 : THEME === "dopa" ? 12 : 8, displayColors: false,
           filter: (item, idx) => idx === 0,   // 节点重叠时也只显示对应那一个节点
           callbacks: {
             title: items => items.length ? `日期 ${items[0].label}` : "",
